@@ -7,3 +7,6 @@ LibreriaDB/.idea/
 
 # Operating-system files
 .DS_Store
+
+# Open Library dumps are local, very large input data and must not be pushed.
+datos-openlibrary/
