@@ -1,9 +1,9 @@
 # Build output
-EmpresaDB/target/
+LibreriaDB/target/
 
 # Local IDE metadata
 .idea/
-EmpresaDB/.idea/
+LibreriaDB/.idea/
 
 # Operating-system files
 .DS_Store

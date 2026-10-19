@@ -10,6 +10,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>EmpresaDB</module>
+        <module>LibreriaDB</module>
     </modules>
 </project>

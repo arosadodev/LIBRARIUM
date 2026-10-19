@@ -9,7 +9,7 @@ externo para arrancar.
 
 ```text
 .
-├── EmpresaDB/
+├── LibreriaDB/
 │   ├── pom.xml
 │   └── src/main/java/org/example/
 │       ├── Main.java              # Ventana JavaFX
@@ -34,9 +34,8 @@ externo para arrancar.
 └── README.md
 ```
 
-El nombre histórico de la carpeta Maven (`EmpresaDB`) se conserva para no
-romper la configuración del proyecto, pero la aplicación ya no contiene la
-lógica de departamentos ni empleados.
+El proyecto Maven está ubicado en `LibreriaDB` y la aplicación ya no contiene
+la lógica de departamentos ni empleados.
 
 ## Modelo de datos
 
@@ -107,7 +106,7 @@ sqlite3 libros.db < sql/libros.sql
 Para usar otra ubicación de la base:
 
 ```bash
-cd EmpresaDB
+cd LibreriaDB
 mvn exec:java -Dexec.mainClass=org.example.Main \
   -Dlibrarium.db=/ruta/completa/catalogo.db
 ```
@@ -133,7 +132,7 @@ También se puede hacer manualmente:
 
 ```bash
 mvn clean compile
-cd EmpresaDB
+cd LibreriaDB
 mvn javafx:run
 ```
 
@@ -235,19 +234,19 @@ En IntelliJ puedes ejecutar la configuración **LIBRARIUM JavaFX (Maven)**. Esta
 configuración ejecuta `javafx:run`, compila antes de arrancar y añade
 automáticamente `target/classes` y todas las dependencias al classpath. Si
 usas una configuración de tipo **Application**, ejecuta antes **Build →
-Build Project** para que exista `EmpresaDB/target/classes`.
+Build Project** para que exista `LibreriaDB/target/classes`.
 Si IntelliJ muestra `package javafx.application does not exist`, pulsa
 **Reload All Maven Projects** y comprueba que el módulo `LIBRARIUM` está
 seleccionado. El módulo incluye JavaFX 21.0.5 y SQLite JDBC; no hay que añadir
 los JAR manualmente desde el editor.
 La configuración **LIBRARIUM JavaFX** usa el módulo raíz `LIBRARIUM`, cuyo
-output está fijado a `EmpresaDB/target/classes`; no cambies ese módulo por uno
+output está fijado a `LibreriaDB/target/classes`; no cambies ese módulo por uno
 vacío o por el proyecto Maven padre.
 
 También se puede ejecutar directamente después de compilar:
 
 ```bash
-cd EmpresaDB
+cd LibreriaDB
 mvn javafx:run
 ```
 
