@@ -1,0 +1,9 @@
+# Build output
+EmpresaDB/target/
+
+# Local IDE metadata
+.idea/
+EmpresaDB/.idea/
+
+# Operating-system files
+.DS_Store
