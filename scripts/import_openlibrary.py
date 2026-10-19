@@ -5,6 +5,7 @@ import argparse
 import gzip
 import json
 import sqlite3
+import sys
 from pathlib import Path
 
 
@@ -70,6 +71,24 @@ def main():
     parser.add_argument("--database", type=Path, default=Path("libros.db"))
     parser.add_argument("--schema", type=Path, default=Path("sql/libros.sql"))
     args = parser.parse_args()
+
+    missing = [path for path in (args.authors, args.works, args.editions) if not path.is_file()]
+    if missing:
+        print("Faltan archivos de Open Library:", file=sys.stderr)
+        for path in missing:
+            print(f"  - {path}", file=sys.stderr)
+        print(
+            "\nDescárgalos antes de importar. Consulta README.md o ejecuta:\n"
+            "  mkdir -p datos-openlibrary\n"
+            "  curl -L https://openlibrary.org/data/ol_dump_authors_latest.txt.gz "
+            "-o datos-openlibrary/authors.txt.gz\n"
+            "  curl -L https://openlibrary.org/data/ol_dump_works_latest.txt.gz "
+            "-o datos-openlibrary/works.txt.gz\n"
+            "  curl -L https://openlibrary.org/data/ol_dump_editions_latest.txt.gz "
+            "-o datos-openlibrary/editions.txt.gz",
+            file=sys.stderr,
+        )
+        return 2
 
     args.database.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(args.database)

@@ -187,6 +187,17 @@ curl -L https://openlibrary.org/data/ol_dump_editions_latest.txt.gz \
   -o datos-openlibrary/editions.txt.gz
 ```
 
+Comprueba que existen antes de importar:
+
+```bash
+ls -lh datos-openlibrary/*.txt.gz
+```
+
+Si aparece `FileNotFoundError` para `datos-openlibrary/authors.txt.gz`,
+significa que todavía no se ha descargado ese archivo o que tiene otro nombre.
+El importador comprueba los tres ficheros antes de modificar `libros.db` y
+muestra los comandos de descarga si falta alguno.
+
 Después importa en el orden autores, obras y ediciones:
 
 ```bash
