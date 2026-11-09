@@ -21,7 +21,7 @@ public class Libro {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "open_library_key", length = 100)
+    @Column(name = "open_library_key", length = 100, unique = true)
     private String openLibraryKey;
 
     @Column(length = 20)

@@ -1,6 +1,6 @@
 INSERT INTO usuarios (username, email, password_hash, rol)
-VALUES ('admin', 'admin@librarium.org', '1234', 'ROLE_ADMIN'),
-       ('andres', 'andres@gmail.com', '1234', 'ROLE_USER');
+VALUES ('admin', 'admin@librarium.org', '$2y$10$JSnXt0DHCVPWps8RJZ1CkutEQpMw9yWUwnRFn6jrWX.TynJTuiedG', 'ROLE_ADMIN'),
+       ('andres', 'andres@gmail.com', '$2y$10$Imsx8dxi4IkrFhsJbm2zcumQgx2TnlC0O45I1.me2fpAbfujo9lpB', 'ROLE_USER');
 
 INSERT INTO libros (open_library_key, isbn, titulo, autor, sinopsis, ano_publicacion, portada_url)
 VALUES ('/works/OL27448W', '9780451524935', '1984', 'George Orwell',

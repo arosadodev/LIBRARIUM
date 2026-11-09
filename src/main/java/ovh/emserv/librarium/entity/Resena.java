@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "resenas")
+@org.hibernate.annotations.Check(constraints = "puntuacion BETWEEN 1 AND 5")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
