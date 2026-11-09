@@ -23,7 +23,7 @@ public class ForoHilo {
     @Column(name = "contenido_inicial", nullable = false, columnDefinition = "TEXT")
     private String contenidoInicial;
 
-    @Column(name = "fecha_creacion", updatable = false)
+    @Column(name = "fecha_registro", updatable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)

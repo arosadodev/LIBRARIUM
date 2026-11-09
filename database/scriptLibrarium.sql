@@ -18,7 +18,7 @@ CREATE TABLE usuarios
 CREATE TABLE libros
 (
     id               INT AUTO_INCREMENT PRIMARY KEY,
-    open_library_key VARCHAR(100),
+    open_library_key VARCHAR(100) UNIQUE,
     isbn             VARCHAR(20),
     titulo           VARCHAR(255) NOT NULL,
     autor            VARCHAR(255) NOT NULL,

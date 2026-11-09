@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Anotacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "capitulo_numero")
     private Integer capituloNumero;
@@ -29,7 +29,7 @@ public class Anotacion {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    @Column(name = "fecha_creacion", updatable = false)
+    @Column(name = "fecha_registro", updatable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)

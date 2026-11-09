@@ -19,7 +19,7 @@ public class ForoRespuesta {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
-    @Column(name = "fecha_creacion", updatable = false)
+    @Column(name = "fecha_registro", updatable = false)
     private LocalDateTime fechaCreacion;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
