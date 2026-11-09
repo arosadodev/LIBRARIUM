@@ -14,3 +14,25 @@ CREATE TABLE usuarios (
     fecha_registro DATETIME default CURRENT_TIMESTAMP
 );
 
+CREATE TABLE libros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    open_library_key VARCHAR(100),
+    isbn VARCHAR(20),
+    titulo VARCHAR(255) NOT NULL,
+    autor VARCHAR(255) NOT NULL,
+    sinopsis TEXT,
+    ano_publicacion INT,
+    portada_url VARCHAR(500),
+    fecha_registro DATETIME default CURRENT_TIMESTAMP
+);
+
+CREATE TABLE resenas (
+    id INT AUTO_INCREMENT PRIMARY KEY ,
+    libro_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    puntuacion INT NOT NULL,
+    comentario TEXT,
+    fecha_registro DATETIME default CURRENT_TIMESTAMP,
+    FOREIGN KEY (libro_id) REFERENCES libros(id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
