@@ -1,4 +1,4 @@
-package ovh.emserv.librrarium;
+package ovh.emserv.librarium;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

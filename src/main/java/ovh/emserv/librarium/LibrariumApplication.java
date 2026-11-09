@@ -1,13 +1,13 @@
-package ovh.emserv.librrarium;
+package ovh.emserv.librarium;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class LibrrariumApplication {
+public class LibrariumApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(LibrrariumApplication.class, args);
+        SpringApplication.run(LibrariumApplication.class, args);
     }
 
 }

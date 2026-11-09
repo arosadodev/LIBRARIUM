@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>ovh.emserv</groupId>
-    <artifactId>LIBRRARIUM</artifactId>
+    <artifactId>LIBRARIUM</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>LIBRRARIUM</name>
     <description>LIBRRARIUM</description>
