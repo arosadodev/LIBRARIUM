@@ -4,6 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * @author mit
+ * @date 9/11/26 10:02
+ */
 @Data
 public class ForoHiloDTO {
     private Long id;

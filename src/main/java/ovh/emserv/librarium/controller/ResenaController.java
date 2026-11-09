@@ -8,6 +8,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author mit
+ * @date 9/11/26 10:02
+ */
 @RestController
 @RequestMapping("/api/resenas")
 public class ResenaController {

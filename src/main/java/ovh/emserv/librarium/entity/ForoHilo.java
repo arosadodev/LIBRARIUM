@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author mit
+ * @date 9/11/26 10:02
+ */
 @Entity
 @Table(name = "foro_hilos")
 @Data
