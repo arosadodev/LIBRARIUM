@@ -49,7 +49,7 @@ CREATE TABLE anotaciones_guias
     pagina          INT,
     tipo            ENUM ('CITA', 'ANALISIS', 'REFERENCIA') NOT NULL,
     contenido       TEXT                                    NOT NULL,
-    fecha_creacion  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_registro  DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (libro_id) REFERENCES libros (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );
@@ -61,7 +61,7 @@ CREATE TABLE foro_hilos
     usuario_id        INT          NOT NULL,
     titulo_hilo       VARCHAR(200) NOT NULL,
     contenido_inicial TEXT         NOT NULL,
-    fecha_creacion    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_registro    DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (libro_id) REFERENCES libros (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );
@@ -72,7 +72,7 @@ CREATE TABLE foro_respuestas
     hilo_id        INT  NOT NULL,
     usuario_id     INT  NOT NULL,
     contenido      TEXT NOT NULL,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (hilo_id) REFERENCES foro_hilos (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );

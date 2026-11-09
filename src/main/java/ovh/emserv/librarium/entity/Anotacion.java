@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Anotacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(name = "capitulo_numero")
     private Integer capituloNumero;
