@@ -1,12 +1,12 @@
 package ovh.emserv.librarium.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ovh.emserv.librarium.dto.OpenLibraryImportarDTO;
 import ovh.emserv.librarium.dto.OpenLibraryLibroDTO;
 import ovh.emserv.librarium.entity.Libro;
 import ovh.emserv.librarium.repository.LibroRepository;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
