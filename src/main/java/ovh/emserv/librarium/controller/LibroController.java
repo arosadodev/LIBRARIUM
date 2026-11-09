@@ -1,5 +1,8 @@
 package ovh.emserv.librarium.controller;
 
+import jakarta.validation.Valid;
+import ovh.emserv.librarium.dto.OpenLibraryImportarDTO;
+import ovh.emserv.librarium.dto.OpenLibraryLibroDTO;
 import ovh.emserv.librarium.entity.Libro;
 import ovh.emserv.librarium.service.LibroService;
 import ovh.emserv.librarium.service.OpenLibraryService;
@@ -40,7 +43,12 @@ public class LibroController {
     }
 
     @GetMapping(value = "/buscar-externo", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> buscarExterno(@RequestParam String q) {
+    public ResponseEntity<List<OpenLibraryLibroDTO>> buscarExterno(@RequestParam String q) {
         return ResponseEntity.ok(openLibrary.buscar(q));
+    }
+
+    @PostMapping("/importar")
+    public ResponseEntity<Libro> importar(@Valid @RequestBody OpenLibraryImportarDTO datos) {
+        return ResponseEntity.ok(openLibrary.importar(datos));
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -45,7 +46,7 @@ public class ConfiguracionSeguridad {
                 // RUTAS PERMITIDAS Y RESTRINGIDAS[cite: 18]
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Login y registro públicos[cite: 18]
-                        .requestMatchers("/api/libros/**").permitAll() // Catálogo de libros público[cite: 18]
+                        .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll() // Catálogo de libros público[cite: 18]
                         .anyRequest().authenticated() // Todo lo demás protegido[cite: 18]
                 )
 
