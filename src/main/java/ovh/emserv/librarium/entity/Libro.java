@@ -30,8 +30,11 @@ public class Libro {
     @Column(nullable = false, length = 255)
     private String titulo;
 
-    @Column(nullable = false, length = 255)
-    private String autor;
+    @ManyToMany
+    @JoinTable(name = "libros_autores",
+            joinColumns = @JoinColumn(name = "libro_id"),
+            inverseJoinColumns = @JoinColumn(name = "autor_id"))
+    private java.util.Set<Autor> autores = new java.util.LinkedHashSet<>();
 
     @Column(columnDefinition = "TEXT")
     private String sinopsis;

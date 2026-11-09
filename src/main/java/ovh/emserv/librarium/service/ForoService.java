@@ -8,6 +8,7 @@ import ovh.emserv.librarium.repository.ForoRespuestaRepository;
 import ovh.emserv.librarium.repository.LibroRepository;
 import ovh.emserv.librarium.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
@@ -33,8 +34,10 @@ public class ForoService {
         ForoHilo hilo = new ForoHilo();
         hilo.setTituloHilo(dto.getTituloHilo());
         hilo.setContenidoInicial(dto.getContenidoInicial());
-        hilo.setLibro(libros.findById(dto.getLibroId()).orElseThrow());
-        hilo.setUsuario(usuarios.findById(dto.getUsuarioId()).orElseThrow());
+        hilo.setLibro(libros.findById(dto.getLibroId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.getLibroId())));
+        hilo.setUsuario(usuarios.findById(dto.getUsuarioId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + dto.getUsuarioId())));
         return hilos.save(hilo);
     }
 

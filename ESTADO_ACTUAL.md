@@ -70,12 +70,16 @@ Contiene estas tablas:
 
 1. `usuarios`
 2. `libros`
-3. `resenas`
-4. `anotaciones_guias`
-5. `foro_hilos`
-6. `foro_respuestas`
+3. `autores`
+4. `libros_autores`, tabla puente que permite varios autores por libro
+5. `resenas`
+6. `anotaciones_guias`
+7. `foro_hilos`
+8. `foro_respuestas`
 
-Los identificadores SQL usan `BIGINT`, que corresponde con `Long` en las entidades Java.
+Los identificadores SQL usan `BIGINT`, que corresponde con `Long` en las entidades Java. Un libro
+se relaciona con uno o varios registros de `autores` mediante `libros_autores`; ya no se guarda
+un único autor como texto dentro de `libros`.
 
 ### Datos de ejemplo
 
@@ -359,14 +363,15 @@ Las siguientes partes siguen pendientes:
 
 ## 12. Próximo orden de trabajo
 
-1. Crear el manejo global de errores.
-2. Sustituir `orElseThrow()` genéricos por excepciones controladas.
-3. Implementar respuestas de foro.
-4. Añadir DTOs de salida para evitar exponer entidades y relaciones JPA.
-5. Aplicar permisos de propietario y administrador.
-6. Mover la clave JWT a configuración segura estable.
-7. Crear pruebas automatizadas.
-8. Actualizar README, documentar variables de entorno y configurar CI.
+1. Implementar respuestas de foro.
+2. Añadir DTOs de salida para evitar exponer entidades y relaciones JPA.
+3. Aplicar permisos de propietario y administrador.
+4. Mover la clave JWT a configuración segura estable.
+5. Crear pruebas automatizadas.
+6. Actualizar README, documentar variables de entorno y configurar CI.
+
+El manejo global de errores ya está iniciado: `ManejoErrores` devuelve JSON uniforme
+para validaciones, recursos inexistentes, peticiones inválidas y conflictos de integridad.
 
 ## 13. Comprobación mínima manual
 

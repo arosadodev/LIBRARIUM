@@ -21,11 +21,25 @@ CREATE TABLE libros
     open_library_key VARCHAR(100) UNIQUE,
     isbn             VARCHAR(20),
     titulo           VARCHAR(255) NOT NULL,
-    autor            VARCHAR(255) NOT NULL,
     sinopsis         TEXT,
     ano_publicacion  INT,
     portada_url      VARCHAR(500),
     fecha_registro   DATETIME default CURRENT_TIMESTAMP
+);
+
+CREATE TABLE autores
+(
+    id     BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL UNIQUE
+);
+
+CREATE TABLE libros_autores
+(
+    libro_id BIGINT NOT NULL,
+    autor_id BIGINT NOT NULL,
+    PRIMARY KEY (libro_id, autor_id),
+    FOREIGN KEY (libro_id) REFERENCES libros (id) ON DELETE CASCADE,
+    FOREIGN KEY (autor_id) REFERENCES autores (id) ON DELETE CASCADE
 );
 
 CREATE TABLE resenas

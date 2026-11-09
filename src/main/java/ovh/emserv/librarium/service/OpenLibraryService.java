@@ -3,6 +3,8 @@ package ovh.emserv.librarium.service;
 import ovh.emserv.librarium.dto.OpenLibraryImportarDTO;
 import ovh.emserv.librarium.dto.OpenLibraryLibroDTO;
 import ovh.emserv.librarium.entity.Libro;
+import ovh.emserv.librarium.entity.Autor;
+import ovh.emserv.librarium.repository.AutorRepository;
 import ovh.emserv.librarium.repository.LibroRepository;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
@@ -26,13 +28,16 @@ public class OpenLibraryService {
     private final HttpClient client;
     private final ObjectMapper objectMapper;
     private final LibroRepository libroRepository;
+    private final AutorRepository autorRepository;
 
-    public OpenLibraryService(ObjectMapper objectMapper, LibroRepository libroRepository) {
+    public OpenLibraryService(ObjectMapper objectMapper, LibroRepository libroRepository,
+                              AutorRepository autorRepository) {
         this.client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
         this.objectMapper = objectMapper;
         this.libroRepository = libroRepository;
+        this.autorRepository = autorRepository;
     }
 
     public List<OpenLibraryLibroDTO> buscar(String consulta) {
@@ -107,9 +112,11 @@ public class OpenLibraryService {
         Libro libro = new Libro();
         libro.setOpenLibraryKey(datos.key());
         libro.setTitulo(datos.title());
-        libro.setAutor(datos.authors() == null || datos.authors().isEmpty()
-                ? "Autor desconocido"
-                : String.join(", ", datos.authors()));
+        List<String> nombres = datos.authors() == null || datos.authors().isEmpty()
+                ? List.of("Autor desconocido")
+                : datos.authors().stream().filter(nombre -> nombre != null && !nombre.isBlank()).distinct().toList();
+        nombres.forEach(nombre -> libro.getAutores().add(autorRepository.findByNombreIgnoreCase(nombre)
+                .orElseGet(() -> autorRepository.save(new Autor(null, nombre)))));
         libro.setIsbn(datos.isbn());
         libro.setAnoPublicacion(datos.firstPublishYear());
         libro.setPortadaUrl(datos.coverUrl());

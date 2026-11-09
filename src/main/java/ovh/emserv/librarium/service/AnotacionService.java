@@ -6,6 +6,7 @@ import ovh.emserv.librarium.repository.AnotacionRepository;
 import ovh.emserv.librarium.repository.LibroRepository;
 import ovh.emserv.librarium.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
@@ -31,8 +32,10 @@ public class AnotacionService {
         anotacion.setPagina(dto.getPagina());
         anotacion.setTipo(dto.getTipo());
         anotacion.setContenido(dto.getContenido());
-        anotacion.setLibro(libros.findById(dto.getLibroId()).orElseThrow());
-        anotacion.setUsuario(usuarios.findById(dto.getUsuarioId()).orElseThrow());
+        anotacion.setLibro(libros.findById(dto.getLibroId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.getLibroId())));
+        anotacion.setUsuario(usuarios.findById(dto.getUsuarioId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + dto.getUsuarioId())));
         return repository.save(anotacion);
     }
 }

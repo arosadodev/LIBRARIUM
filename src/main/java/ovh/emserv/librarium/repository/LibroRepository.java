@@ -11,7 +11,13 @@ import java.util.Optional;
  * @date 9/11/26 10:02
  */
 public interface LibroRepository extends JpaRepository<Libro, Long> {
-    List<Libro> findByTituloContainingIgnoreCaseOrAutorContainingIgnoreCase(String titulo, String autor);
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT DISTINCT l FROM Libro l
+            LEFT JOIN l.autores a
+            WHERE LOWER(l.titulo) LIKE LOWER(CONCAT('%', :texto, '%'))
+               OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :texto, '%'))
+            """)
+    List<Libro> buscarPorTituloOAutor(String texto);
 
     Optional<Libro> findByOpenLibraryKey(String openLibraryKey);
 }

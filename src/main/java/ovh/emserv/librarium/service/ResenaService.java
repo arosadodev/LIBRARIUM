@@ -6,6 +6,7 @@ import ovh.emserv.librarium.repository.LibroRepository;
 import ovh.emserv.librarium.repository.ResenaRepository;
 import ovh.emserv.librarium.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
@@ -29,8 +30,10 @@ public class ResenaService {
         Resena resena = new Resena();
         resena.setPuntuacion(dto.getPuntuacion());
         resena.setComentario(dto.getComentario());
-        resena.setLibro(libros.findById(dto.getLibroId()).orElseThrow());
-        resena.setUsuario(usuarios.findById(dto.getUsuarioId()).orElseThrow());
+        resena.setLibro(libros.findById(dto.getLibroId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.getLibroId())));
+        resena.setUsuario(usuarios.findById(dto.getUsuarioId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + dto.getUsuarioId())));
         return repository.save(resena);
     }
 }
