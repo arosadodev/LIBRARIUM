@@ -65,7 +65,7 @@ No empezar un bloque hasta terminar sus dependencias:
 1. Mantener la configuración de Spring Security.
 2. Mantener registro, login y DTO de respuesta.
 3. Hashear contraseñas con BCrypt antes de persistirlas.
-4. Externalizar la clave JWT en una variable de entorno o secreto estable.
+4. Configurar `LIBRARIUM_JWT_SECRET` con una clave Base64 de al menos 32 bytes.
 5. Configurar sesiones stateless.
 6. Definir permisos para `ROLE_USER` y `ROLE_ADMIN`.
 7. Probar respuestas 401 y 403.
@@ -145,7 +145,7 @@ No empezar un bloque hasta terminar sus dependencias:
 2. Documentar endpoints y ejemplos JSON.
 3. Mantener la documentación OpenAPI/Swagger UI y añadir ejemplos de seguridad.
 4. Revisar `README.md` y `AGENTS.md`.
-5. Configurar CI para compilar y ejecutar tests.
+5. Configurar CI para compilar y ejecutar tests; el workflow está en `.github/workflows/ci.yml`.
 6. Revisar secretos, logs, dependencias y diferencias del esquema.
 7. Abrir pull request y enlazar las issues resueltas.
 

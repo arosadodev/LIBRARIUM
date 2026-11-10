@@ -46,13 +46,23 @@ Las entidades usan JPA y Lombok. Las fechas se inicializan con `@PrePersist`. Lo
 - `GET /api/libros/buscar-externo?q=...`
 - `POST /api/libros/importar`
 - `POST /api/resenas`
+- `GET /api/resenas?libroId=...&usuarioId=...`
+- `PUT /api/resenas/{id}`
+- `DELETE /api/resenas/{id}`
 - `GET /api/anotaciones?libroId=...`
 - `POST /api/anotaciones`
+- `PUT /api/anotaciones/{id}`
+- `DELETE /api/anotaciones/{id}`
 - `GET /api/foros?libroId=...`
 - `POST /api/foros`
-- `GET /api/foros/{hiloId}/respuestas`
+- `PUT /api/foros/{id}`
+- `DELETE /api/foros/{id}`
+- `GET /api/foros/{hiloId}/respuestas?page=0&size=20`
+- `POST /api/foros/{hiloId}/respuestas`
+- `PUT /api/foros/respuestas/{id}`
+- `DELETE /api/foros/respuestas/{id}`
 
-La integración con Open Library se realiza actualmente mediante `java.net.http.HttpClient`. La búsqueda externa no persiste datos; la importación recibe el resultado seleccionado y lo guarda junto con sus autores. La autenticación JWT, BCrypt y la autorización por roles están operativas; la clave JWT todavía debe externalizarse para conservar los tokens entre reinicios.
+La integración con Open Library se realiza actualmente mediante `java.net.http.HttpClient`. La búsqueda externa no persiste datos; la importación recibe el resultado seleccionado y lo guarda junto con sus autores. La autenticación JWT, BCrypt, autorización por roles y la clave persistente mediante `LIBRARIUM_JWT_SECRET` están operativas.
 
 ## Modelo de datos
 
@@ -79,18 +89,18 @@ Con la aplicación iniciada:
 ## Configuración y ejecución
 
 1. Crear la base de datos ejecutando `database/scriptLibrarium.sql`.
-2. Revisar las credenciales de `src/main/resources/application.properties`.
-3. Ejecutar `./mvnw spring-boot:run`.
-4. Usar el puerto `8080`, salvo que se modifique `server.port`.
+2. Definir `LIBRARIUM_JWT_SECRET` con una clave Base64 de al menos 32 bytes.
+3. Revisar las credenciales de `src/main/resources/application.properties`.
+4. Iniciar el contenedor MySQL en `localhost:3308`.
+5. Ejecutar `./mvnw spring-boot:run`.
+6. Usar el puerto `8080`, salvo que se modifique `server.port`.
 
 No se deben versionar credenciales reales. La configuración local debe migrarse a variables de entorno o perfiles de Spring antes de publicar el proyecto.
 
 ## Próximos bloques técnicos
 
-1. Externalizar la clave JWT y no regenerarla al reiniciar.
-2. Crear DTOs de respuesta para no exponer entidades ni `passwordHash`.
-3. Añadir consulta de reseñas y creación de respuestas de foro.
-4. Completar autorización de propietario y administrador.
-5. Añadir pruebas unitarias y de integración.
+1. Añadir más pruebas de integración MockMvc y repositorios.
+2. Versionar las migraciones de base de datos.
+3. Completar ejemplos de permisos y errores en OpenAPI.
 
 La guía interna de ejecución está en [`PROCESOS.md`](PROCESOS.md). El seguimiento público de cada bloque se realiza mediante GitHub Issues.

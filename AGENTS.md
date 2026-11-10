@@ -18,7 +18,7 @@ El backend está en `src/main/java/ovh/emserv/librarium/` y usa Java 25 con Spri
 
 La base de datos contiene `password_hash` y los roles `ROLE_USER` y `ROLE_ADMIN`. Toda implementación de registro debe usar `BCryptPasswordEncoder`; nunca guardar contraseñas en texto plano.
 
-La autenticación stateless con JWT, BCrypt y autorización por roles ya está implementada. `ServicioJwt` todavía genera la clave al arrancar; cualquier cambio de seguridad debe externalizarla sin guardar secretos en el repositorio.
+La autenticación stateless con JWT, BCrypt, autorización por roles y clave persistente mediante `LIBRARIUM_JWT_SECRET` está implementada. Nunca guardar la clave en el repositorio.
 
 ## DTOs y respuestas
 
