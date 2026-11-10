@@ -27,7 +27,7 @@ SLF4J="$M2/org/slf4j/slf4j-api/$SLF4J_VERSION/slf4j-api-$SLF4J_VERSION.jar"
 
 for file in "$JAVAC" "$JAVA" "$FX_BASE" "$FX_GRAPHICS" "$FX_CONTROLS" "$SQLITE" "$SLF4J"; do
     if [[ ! -f "$file" || ! -x "$file" && "$file" == "$JAVAC" || ! -x "$file" && "$file" == "$JAVA" ]]; then
-        echo "Falta un requisito para ejecutar LIBRARIUM: $file" >&2
+        echo "Falta un requisito para ejecutar LibrariumBeta: $file" >&2
         echo "Instala Maven o ejecuta el proyecto desde IntelliJ IDEA." >&2
         exit 1
     fi

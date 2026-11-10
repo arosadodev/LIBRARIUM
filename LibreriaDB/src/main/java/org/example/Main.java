@@ -49,7 +49,7 @@ class AplicacionBase extends Application {
         descargar.setOnAction(e -> descargarBase(stage));
         actualizar.setOnAction(e -> cargarDatos());
 
-        VBox cabecera = new VBox(8, new Label("LIBRARIUM - catálogo Open Library"),
+        VBox cabecera = new VBox(8, new Label("LibrariumBeta - catálogo Open Library"),
                 new HBox(8, abrir, descargar, actualizar), estado);
         cabecera.setPadding(new Insets(14));
         TabPane pestañas = new TabPane();
@@ -61,7 +61,7 @@ class AplicacionBase extends Application {
         root.setTop(cabecera);
         root.setPadding(new Insets(10));
         cargarDatos();
-        stage.setTitle("LIBRARIUM");
+        stage.setTitle("LibrariumBeta");
         stage.setScene(new Scene(root, 1150, 720));
         stage.show();
     }

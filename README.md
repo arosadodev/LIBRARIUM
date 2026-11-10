@@ -1,4 +1,4 @@
-# LIBRARIUM
+# LibrariumBeta
 
 Aplicación JavaFX escrita en Java 17 para consultar un catálogo basado en
 el modelo de datos de [Open Library](https://openlibrary.org/). El proyecto
@@ -241,16 +241,16 @@ se pulsa **Guardar**. Las claves Open Library son identificadores únicos. Las
 claves foráneas se respetan: no se puede crear una edición si su obra no
 existe, ni borrar una obra o autor que todavía tenga relaciones dependientes.
 
-En IntelliJ puedes ejecutar la configuración **LIBRARIUM JavaFX (Maven)**. Esta
+En IntelliJ puedes ejecutar la configuración **LibrariumBeta JavaFX (Maven)**. Esta
 configuración ejecuta `javafx:run`, compila antes de arrancar y añade
 automáticamente `target/classes` y todas las dependencias al classpath. Si
 usas una configuración de tipo **Application**, ejecuta antes **Build →
 Build Project** para que exista `LibreriaDB/target/classes`.
 Si IntelliJ muestra `package javafx.application does not exist`, pulsa
-**Reload All Maven Projects** y comprueba que el módulo `LIBRARIUM` está
+**Reload All Maven Projects** y comprueba que el módulo `LibrariumBeta` está
 seleccionado. El módulo incluye JavaFX 21.0.5 y SQLite JDBC; no hay que añadir
 los JAR manualmente desde el editor.
-La configuración **LIBRARIUM JavaFX** usa el módulo raíz `LIBRARIUM`, cuyo
+La configuración **LibrariumBeta JavaFX** usa el módulo raíz `LibrariumBeta`, cuyo
 output está fijado a `LibreriaDB/target/classes`; no cambies ese módulo por uno
 vacío o por el proyecto Maven padre.
 
