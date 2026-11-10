@@ -65,7 +65,7 @@ No empezar un bloque hasta terminar sus dependencias:
 1. Mantener la configuración de Spring Security.
 2. Mantener registro, login y DTO de respuesta.
 3. Hashear contraseñas con BCrypt antes de persistirlas.
-4. Configurar `LIBRARIUM_JWT_SECRET` con una clave Base64 de al menos 32 bytes.
+4. Configurar `LIBRARIUM_JWT_SECRET` con una clave Base64 de al menos 32 bytes. En desarrollo local puede definirse en `.env`, que Spring carga automáticamente y no se versiona.
 5. Configurar sesiones stateless.
 6. Definir permisos para `ROLE_USER` y `ROLE_ADMIN`.
 7. Probar respuestas 401 y 403.

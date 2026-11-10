@@ -89,7 +89,7 @@ Con la aplicación iniciada:
 ## Configuración y ejecución
 
 1. Crear la base de datos ejecutando `database/scriptLibrarium.sql`.
-2. Definir `LIBRARIUM_JWT_SECRET` con una clave Base64 de al menos 32 bytes.
+2. Definir `LIBRARIUM_JWT_SECRET` con una clave Base64 de al menos 32 bytes. Para desarrollo local, copia `.env.example` como `.env` y sustituye el valor; `.env` está ignorado por Git.
 3. Revisar las credenciales de `src/main/resources/application.properties`.
 4. Iniciar el contenedor MySQL en `localhost:3308`.
 5. Ejecutar `./mvnw spring-boot:run`.
