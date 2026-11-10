@@ -341,20 +341,18 @@ GET /api/foros/{hiloId}/respuestas?page=0&size=20
 
 Se pueden consultar hilos y respuestas paginadas, crear respuestas, editar y borrar hilos/respuestas para el propietario o administradores.
 
-## 11. Qué no está terminado
+## 11. Estado de entrega
 
-Las siguientes partes siguen pendientes:
+Las issues funcionales #5–#9 están cerradas. La entrega actual incluye:
 
-1. **Reseñas y anotaciones:** ampliar pruebas de integración.
-2. **Foros:** ampliar pruebas de integración y moderación avanzada.
-3. **Errores HTTP:** `ManejoErrores` ya cubre validación, petición inválida, conflicto, acceso denegado, recurso no encontrado, integridad y Open Library.
-4. **Excepciones de dominio:** los servicios usan excepciones específicas del paquete `exception`.
-5. **Pruebas automatizadas:** existen pruebas unitarias y de contexto H2; faltan más tests MockMvc y autorización.
-6. **CI:** configurado en `.github/workflows/ci.yml`.
+1. **Reseñas, anotaciones y foros:** CRUD, DTOs, permisos de propietario/admin y paginación.
+2. **Errores HTTP:** `ManejoErrores` cubre validación, petición inválida, conflicto, acceso denegado, recurso no encontrado, integridad y Open Library.
+3. **Pruebas automatizadas:** pruebas unitarias y de contexto con H2; la suite `./mvnw test` pasa sin depender de MySQL.
+4. **CI:** workflow reproducible en `.github/workflows/ci.yml` con Java 25.
 
-## 12. Próximo orden de trabajo
+## 12. Deuda técnica priorizada
 
-1. Añadir pruebas MockMvc de 401/403 y CRUD.
+1. Añadir más pruebas MockMvc de 401/403 y CRUD.
 2. Versionar migraciones de base de datos.
 3. Completar ejemplos OpenAPI y variables de entorno.
 
