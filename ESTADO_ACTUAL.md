@@ -26,7 +26,7 @@ La aplicación está implementada con:
 - BCrypt;
 - Maven mediante `./mvnw`.
 
-El código real está en `src/main/java/ovh/emserv/librarium/`. Algunas rutas antiguas de `README.md` todavía mencionan `com/librarium`; deben considerarse desactualizadas.
+El código real está en `src/main/java/ovh/emserv/librarium/`.
 
 ## 2. Cómo arranca la aplicación
 
@@ -358,8 +358,7 @@ Las siguientes partes siguen pendientes:
 4. **Excepciones de dominio:** todavía existen `orElseThrow()` genéricos.
 5. **JWT:** la clave debe persistir entre reinicios.
 6. **Pruebas automatizadas:** faltan tests unitarios, de repositorio, MockMvc y de integración.
-7. **Documentación:** este documento refleja el estado actual, pero el README original todavía debe actualizarse.
-8. **CI:** todavía falta configurar compilación y tests automáticos en GitHub Actions.
+7. **CI:** todavía falta configurar compilación y tests automáticos en GitHub Actions.
 
 ## 12. Próximo orden de trabajo
 
@@ -368,7 +367,7 @@ Las siguientes partes siguen pendientes:
 3. Aplicar permisos de propietario y administrador.
 4. Mover la clave JWT a configuración segura estable.
 5. Crear pruebas automatizadas.
-6. Actualizar README, documentar variables de entorno y configurar CI.
+6. Documentar variables de entorno y configurar CI.
 
 El manejo global de errores ya está iniciado: `ManejoErrores` devuelve JSON uniforme
 para validaciones, recursos inexistentes, peticiones inválidas y conflictos de integridad.

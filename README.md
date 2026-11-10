@@ -12,17 +12,16 @@ Librarium Marginalia es una plataforma colaborativa para reseñas, análisis lit
 - **Base de datos:** MySQL/MariaDB, configurada en `src/main/resources/application.properties`
 - **Validación:** Jakarta Validation
 - **JSON:** Jackson mediante Spring MVC
-- **Código backend:** `src/main/java/com/librarium/`
+- **Código backend:** `src/main/java/ovh/emserv/librarium/`
 - **Aplicación existente:** `ovh.emserv.librarium.LibrariumApplication`
-- **API adicional:** `com.librarium.ApiApplication`
 
 La compilación requiere un JDK compatible con Java 25. El proyecto no debe documentarse como Java 17/Spring Boot 3 mientras `pom.xml` mantenga esta configuración.
 
 ## Estructura del backend
 
 ```text
-src/main/java/com/librarium/
-├── ApiApplication.java
+src/main/java/ovh/emserv/librarium/
+├── LibrariumApplication.java
 ├── config/
 │   └── CorsConfig.java
 ├── entity/
@@ -44,6 +43,7 @@ Las entidades usan JPA y Lombok. Las fechas se inicializan con `@PrePersist`. Lo
 - `GET /api/libros/{id}`
 - `GET /api/libros/buscar?q=...`
 - `GET /api/libros/buscar-externo?q=...`
+- `POST /api/libros/importar`
 - `GET /api/resenas?libroId=...`
 - `POST /api/resenas`
 - `GET /api/anotaciones?libroId=...`
@@ -52,20 +52,22 @@ Las entidades usan JPA y Lombok. Las fechas se inicializan con `@PrePersist`. Lo
 - `POST /api/foros`
 - `GET /api/foros/{hiloId}/respuestas`
 
-La integración con Open Library se realiza actualmente mediante `java.net.http.HttpClient`. La autenticación JWT y la autorización por roles están preparadas como objetivo técnico, pero todavía deben terminar de implementarse en la API.
+La integración con Open Library se realiza actualmente mediante `java.net.http.HttpClient`. La búsqueda externa no persiste datos; la importación recibe el resultado seleccionado y lo guarda junto con sus autores. La autenticación JWT y la autorización por roles están preparadas como objetivo técnico, pero todavía deben terminar de implementarse en la API.
 
 ## Modelo de datos
 
-El esquema fuente es `database/scriptLibrarium.sql` y contiene seis tablas:
+El esquema fuente es `database/scriptLibrarium.sql` y contiene ocho tablas:
 
 - `usuarios`: `id`, `username`, `email`, `password_hash`, `rol`, `fecha_registro`.
-- `libros`: `id`, `open_library_key`, `isbn`, `titulo`, `autor`, `sinopsis`, `ano_publicacion`, `portada_url`, `fecha_registro`.
+- `libros`: `id`, `open_library_key`, `isbn`, `titulo`, `sinopsis`, `ano_publicacion`, `portada_url`, `fecha_registro`.
+- `autores`: autores reutilizables identificados por nombre.
+- `libros_autores`: tabla puente para la relación de varios autores por libro.
 - `resenas`: relación con `libros` y `usuarios`, puntuación, comentario y `fecha_registro`.
 - `anotaciones_guias`: relación con `libros` y `usuarios`, capítulo, página, tipo, contenido y `fecha_creacion`.
 - `foro_hilos`: relación con `libros` y `usuarios`, título, contenido inicial y `fecha_creacion`.
 - `foro_respuestas`: relación con `foro_hilos` y `usuarios`, contenido y `fecha_creacion`.
 
-Las claves primarias del script SQL son `INT AUTO_INCREMENT`; las entidades Java usan `Long`, por lo que este punto debe normalizarse antes de desplegar en producción. `open_library_key` tampoco tiene todavía una restricción `UNIQUE` en el script.
+Las claves primarias del script SQL usan `BIGINT AUTO_INCREMENT`, compatible con `Long` en las entidades Java. `open_library_key` tiene una restricción `UNIQUE` para evitar duplicados.
 
 ## Configuración y ejecución
 

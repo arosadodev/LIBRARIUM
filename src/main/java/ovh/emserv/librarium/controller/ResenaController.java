@@ -4,9 +4,9 @@ import ovh.emserv.librarium.dto.ResenaDTO;
 import ovh.emserv.librarium.entity.Resena;
 import ovh.emserv.librarium.service.ResenaService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author mit
@@ -15,19 +15,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/resenas")
 public class ResenaController {
-    private final ResenaService service;
+    private final ResenaService resenaService;
 
-    public ResenaController(ResenaService service) {
-        this.service = service;
-    }
-
-    @GetMapping
-    public List<Resena> listar(@RequestParam(required = false) Long libroId) {
-        return service.listar(libroId);
+    public ResenaController(ResenaService resenaService) {
+        this.resenaService = resenaService;
     }
 
     @PostMapping
-    public Resena crear(@Valid @RequestBody ResenaDTO dto) {
-        return service.crear(dto);
+    public ResponseEntity<Resena> crearResena(@Valid @RequestBody ResenaDTO dto, Authentication autenticacion) {
+        // authentication.getName() extrae el email del usuario desde el JWT validado
+        String emailUsuarioLogueado = autenticacion.getName();
+
+        Resena nuevaResena = resenaService.crearResenaSegura(dto, emailUsuarioLogueado);
+        return ResponseEntity.ok(nuevaResena);
     }
 }

@@ -12,28 +12,50 @@ import java.util.List;
 
 @Service
 public class ResenaService {
-    private final ResenaRepository repository;
-    private final LibroRepository libros;
-    private final UsuarioRepository usuarios;
+    private final ResenaRepository resenaRepository;
+    private final LibroRepository libroRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public ResenaService(ResenaRepository repository, LibroRepository libros, UsuarioRepository usuarios) {
-        this.repository = repository;
-        this.libros = libros;
-        this.usuarios = usuarios;
+    public ResenaService(ResenaRepository resenaRepository, LibroRepository libroRepository, UsuarioRepository usuarioRepository) {
+        this.resenaRepository = resenaRepository;
+        this.libroRepository = libroRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
-    public List<Resena> listar(Long libroId) {
-        return libroId == null ? repository.findAll() : repository.findByLibroId(libroId);
-    }
+    public Resena crearResenaSegura(ResenaDTO dto, String emailUsuario) {
+        var libro = libroRepository.findById(dto.libroId())
+                .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado"));
 
-    public Resena crear(ResenaDTO dto) {
+        var usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
         Resena resena = new Resena();
-        resena.setPuntuacion(dto.getPuntuacion());
-        resena.setComentario(dto.getComentario());
-        resena.setLibro(libros.findById(dto.getLibroId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.getLibroId())));
-        resena.setUsuario(usuarios.findById(dto.getUsuarioId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + dto.getUsuarioId())));
-        return repository.save(resena);
+        resena.setPuntuacion(dto.puntuacion());
+        resena.setComentario(dto.comentario());
+        resena.setLibro(libro);
+        resena.setUsuario(usuario); // Asignación 100% segura desde el servidor
+
+        return resenaRepository.save(resena);
+    }
+
+    public void borrarResena(Long idResena, String emailUsuarioLogueado) {
+        // 1. Obtener la reseña y el usuario que hace la petición
+        Resena resena = resenaRepository.findById(idResena)
+                .orElseThrow(() -> new IllegalArgumentException("La reseña no existe"));
+
+        var usuarioSolicitante = usuarioRepository.findByEmail(emailUsuarioLogueado)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario inválido"));
+
+        // 2. Comprobar permisos: ¿Es el dueño o es un administrador?
+        boolean esElDueno = resena.getUsuario().getId().equals(usuarioSolicitante.getId());
+        boolean esAdmin = usuarioSolicitante.getRol().name().equals("ROLE_ADMIN");
+
+        if (!esElDueno && !esAdmin) {
+            // Lanza una excepción (Puedes crear un AccesoDenegadoException personalizado si quieres)
+            throw new SecurityException("No tienes permisos para borrar esta reseña");
+        }
+
+        // 3. Si pasa la validación de seguridad, se borra
+        resenaRepository.delete(resena);
     }
 }
