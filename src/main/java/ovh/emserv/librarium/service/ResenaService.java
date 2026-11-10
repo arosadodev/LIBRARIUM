@@ -1,7 +1,10 @@
 package ovh.emserv.librarium.service;
 
 import ovh.emserv.librarium.dto.ResenaDTO;
+import ovh.emserv.librarium.dto.ResenaRespuestaDTO;
+import ovh.emserv.librarium.dto.UsuarioResumenDTO;
 import ovh.emserv.librarium.entity.Resena;
+import ovh.emserv.librarium.exception.ConflictoException;
 import ovh.emserv.librarium.repository.LibroRepository;
 import ovh.emserv.librarium.repository.ResenaRepository;
 import ovh.emserv.librarium.repository.UsuarioRepository;
@@ -23,12 +26,15 @@ public class ResenaService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public Resena crearResenaSegura(ResenaDTO dto, String emailUsuario) {
+    public ResenaRespuestaDTO crearResenaSegura(ResenaDTO dto, String emailUsuario) {
         var libro = libroRepository.findById(dto.libroId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.libroId()));
 
         var usuario = usuarioRepository.findByEmail(emailUsuario)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + emailUsuario));
+        if (resenaRepository.existsByLibroIdAndUsuarioId(dto.libroId(), usuario.getId())) {
+            throw new ConflictoException("El usuario ya ha reseñado este libro");
+        }
 
         Resena resena = new Resena();
         resena.setPuntuacion(dto.puntuacion());
@@ -36,13 +42,27 @@ public class ResenaService {
         resena.setLibro(libro);
         resena.setUsuario(usuario); // Asignación 100% segura desde el servidor
 
-        return resenaRepository.save(resena);
+        return convertir(resenaRepository.save(resena));
+    }
+
+    public List<ResenaRespuestaDTO> listar(Long libroId, Long usuarioId) {
+        List<Resena> resenas = usuarioId != null ? resenaRepository.findByUsuarioId(usuarioId)
+                : libroId != null ? resenaRepository.findByLibroId(libroId) : resenaRepository.findAll();
+        return resenas
+                .stream().map(this::convertir).toList();
+    }
+
+    public ResenaRespuestaDTO actualizar(Long id, ResenaDTO dto, String email) {
+        Resena resena = obtener(id);
+        comprobarPermiso(resena.getUsuario(), email);
+        resena.setPuntuacion(dto.puntuacion());
+        resena.setComentario(dto.comentario());
+        return convertir(resenaRepository.save(resena));
     }
 
     public void borrarResena(Long idResena, String emailUsuarioLogueado) {
         // 1. Obtener la reseña y el usuario que hace la petición
-        Resena resena = resenaRepository.findById(idResena)
-                .orElseThrow(() -> new RecursoNoEncontradoException("La reseña no existe: " + idResena));
+        Resena resena = obtener(idResena);
 
         var usuarioSolicitante = usuarioRepository.findByEmail(emailUsuarioLogueado)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + emailUsuarioLogueado));
@@ -58,5 +78,24 @@ public class ResenaService {
 
         // 3. Si pasa la validación de seguridad, se borra
         resenaRepository.delete(resena);
+    }
+
+    private Resena obtener(Long id) {
+        return resenaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("La reseña no existe: " + id));
+    }
+
+    private void comprobarPermiso(ovh.emserv.librarium.entity.Usuario propietario, String email) {
+        var usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + email));
+        if (!propietario.getId().equals(usuario.getId()) && usuario.getRol() != ovh.emserv.librarium.entity.Usuario.Rol.ROLE_ADMIN) {
+            throw new ovh.emserv.librarium.exception.AccesoDenegadoException("No tienes permisos sobre esta reseña");
+        }
+    }
+
+    private ResenaRespuestaDTO convertir(Resena resena) {
+        return new ResenaRespuestaDTO(resena.getId(), resena.getPuntuacion(), resena.getComentario(),
+                resena.getFechaRegistro(), resena.getLibro().getId(),
+                new UsuarioResumenDTO(resena.getUsuario().getId(), resena.getUsuario().getUsername()));
     }
 }

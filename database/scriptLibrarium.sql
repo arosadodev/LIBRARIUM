@@ -50,6 +50,7 @@ CREATE TABLE resenas
     puntuacion     INT NOT NULL CHECK (puntuacion BETWEEN 1 AND 5),
     comentario     TEXT,
     fecha_registro DATETIME default CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_resena_libro_usuario (libro_id, usuario_id),
     FOREIGN KEY (libro_id) REFERENCES libros (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );

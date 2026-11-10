@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @date 9/11/26 10:02
  */
 @Entity
-@Table(name = "resenas")
+@Table(name = "resenas", uniqueConstraints = @UniqueConstraint(columnNames = {"libro_id", "usuario_id"}))
 @org.hibernate.annotations.Check(constraints = "puntuacion BETWEEN 1 AND 5")
 @Data
 @NoArgsConstructor

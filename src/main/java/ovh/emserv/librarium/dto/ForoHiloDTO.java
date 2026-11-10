@@ -2,6 +2,7 @@ package ovh.emserv.librarium.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -10,13 +11,12 @@ import lombok.Data;
  */
 @Data
 public class ForoHiloDTO {
-    private Long id;
     @NotBlank
+    @Size(max = 200)
     private String tituloHilo;
     @NotBlank
+    @Size(max = 10000)
     private String contenidoInicial;
     @NotNull
     private Long libroId;
-    @NotNull
-    private Long usuarioId;
 }

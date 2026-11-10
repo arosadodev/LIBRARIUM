@@ -3,6 +3,7 @@ package ovh.emserv.librarium.dto;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * @author mit
@@ -10,6 +11,6 @@ import jakarta.validation.constraints.NotNull;
  */
 public record ResenaDTO(
         @NotNull @Min(1) @Max(5) Integer puntuacion,
-        String comentario,
+        @Size(max = 5000) String comentario,
         @NotNull Long libroId
 ) {}

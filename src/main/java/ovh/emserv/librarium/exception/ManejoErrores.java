@@ -52,6 +52,24 @@ public class ManejoErrores {
         return responder(HttpStatus.BAD_GATEWAY, exception.getMessage(), request);
     }
 
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<ApiError> credenciales(CredencialesInvalidasException exception,
+                                                   HttpServletRequest request) {
+        return responder(HttpStatus.UNAUTHORIZED, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> jsonInvalido(HttpServletRequest request) {
+        return responder(HttpStatus.BAD_REQUEST, "El cuerpo JSON no es válido", request);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiError> parametroFaltante(
+            org.springframework.web.bind.MissingServletRequestParameterException exception,
+            HttpServletRequest request) {
+        return responder(HttpStatus.BAD_REQUEST, "Falta el parámetro: " + exception.getParameterName(), request);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> conflicto(DataIntegrityViolationException exception,
                                                HttpServletRequest request) {

@@ -1,12 +1,13 @@
 package ovh.emserv.librarium.controller;
 
 import ovh.emserv.librarium.dto.ResenaDTO;
-import ovh.emserv.librarium.entity.Resena;
+import ovh.emserv.librarium.dto.ResenaRespuestaDTO;
 import ovh.emserv.librarium.service.ResenaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 /**
  * @author mit
@@ -22,11 +23,29 @@ public class ResenaController {
     }
 
     @PostMapping
-    public ResponseEntity<Resena> crearResena(@Valid @RequestBody ResenaDTO dto, Authentication autenticacion) {
+    public ResponseEntity<ResenaRespuestaDTO> crearResena(@Valid @RequestBody ResenaDTO dto, Authentication autenticacion) {
         // authentication.getName() extrae el email del usuario desde el JWT validado
         String emailUsuarioLogueado = autenticacion.getName();
 
-        Resena nuevaResena = resenaService.crearResenaSegura(dto, emailUsuarioLogueado);
+        ResenaRespuestaDTO nuevaResena = resenaService.crearResenaSegura(dto, emailUsuarioLogueado);
         return ResponseEntity.ok(nuevaResena);
+    }
+
+    @GetMapping
+    public List<ResenaRespuestaDTO> listar(@RequestParam(required = false) Long libroId,
+                                           @RequestParam(required = false) Long usuarioId) {
+        return resenaService.listar(libroId, usuarioId);
+    }
+
+    @PutMapping("/{id}")
+    public ResenaRespuestaDTO actualizar(@PathVariable Long id, @Valid @RequestBody ResenaDTO dto,
+                                         Authentication autenticacion) {
+        return resenaService.actualizar(id, dto, autenticacion.getName());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> borrar(@PathVariable Long id, Authentication autenticacion) {
+        resenaService.borrarResena(id, autenticacion.getName());
+        return ResponseEntity.noContent().build();
     }
 }

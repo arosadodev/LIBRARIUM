@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import jakarta.servlet.http.HttpServletResponse;
+import java.time.Instant;
 
 /**
  * @author mit
@@ -68,7 +70,14 @@ public class ConfiguracionSeguridad {
                                 .decoder(decodificadorJwt())
                                 .jwtAuthenticationConverter(conversorDeRolesJwt())
                         )
-                );
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                escribirError(response, HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Autenticación requerida", request.getRequestURI()))
+                        .accessDeniedHandler((request, response, exception) ->
+                                escribirError(response, HttpServletResponse.SC_FORBIDDEN,
+                                        "No tienes permisos para acceder a este recurso", request.getRequestURI())));
 
         return http.build();
     }
@@ -106,5 +115,15 @@ public class ConfiguracionSeguridad {
     @Bean
     public AuthenticationManager gestorAutenticacion(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    private void escribirError(HttpServletResponse response, int status, String mensaje, String ruta)
+            throws java.io.IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("""
+                {"timestamp":"%s","status":%d,"error":"%s","message":"%s","path":"%s"}
+                """.formatted(Instant.now(), status, status == 401 ? "Unauthorized" : "Forbidden", mensaje, ruta));
     }
 }

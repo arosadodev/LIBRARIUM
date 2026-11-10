@@ -11,4 +11,6 @@ import java.util.List;
  */
 public interface AnotacionRepository extends JpaRepository<Anotacion, Long> {
     List<Anotacion> findByLibroId(Long libroId);
+
+    List<Anotacion> findByUsuarioId(Long usuarioId);
 }

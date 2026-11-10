@@ -3,6 +3,7 @@ package ovh.emserv.librarium.dto;
 import ovh.emserv.librarium.entity.Anotacion;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -17,9 +18,8 @@ public class AnotacionDTO {
     @NotNull
     private Anotacion.Tipo tipo;
     @NotBlank
+    @Size(max = 10000)
     private String contenido;
     @NotNull
     private Long libroId;
-    @NotNull
-    private Long usuarioId;
 }

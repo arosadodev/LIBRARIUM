@@ -1,9 +1,11 @@
 package ovh.emserv.librarium.controller;
 
 import ovh.emserv.librarium.dto.AnotacionDTO;
-import ovh.emserv.librarium.entity.Anotacion;
+import ovh.emserv.librarium.dto.AnotacionRespuestaDTO;
 import ovh.emserv.librarium.service.AnotacionService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,12 +24,25 @@ public class AnotacionController {
     }
 
     @GetMapping
-    public List<Anotacion> listar(@RequestParam(required = false) Long libroId) {
-        return service.listar(libroId);
+    public List<AnotacionRespuestaDTO> listar(@RequestParam(required = false) Long libroId,
+                                              @RequestParam(required = false) Long usuarioId) {
+        return service.listar(libroId, usuarioId);
     }
 
     @PostMapping
-    public Anotacion crear(@Valid @RequestBody AnotacionDTO dto) {
-        return service.crear(dto);
+    public AnotacionRespuestaDTO crear(@Valid @RequestBody AnotacionDTO dto, Authentication autenticacion) {
+        return service.crear(dto, autenticacion.getName());
+    }
+
+    @PutMapping("/{id}")
+    public AnotacionRespuestaDTO actualizar(@PathVariable Long id, @Valid @RequestBody AnotacionDTO dto,
+                                             Authentication autenticacion) {
+        return service.actualizar(id, dto, autenticacion.getName());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> borrar(@PathVariable Long id, Authentication autenticacion) {
+        service.borrar(id, autenticacion.getName());
+        return ResponseEntity.noContent().build();
     }
 }

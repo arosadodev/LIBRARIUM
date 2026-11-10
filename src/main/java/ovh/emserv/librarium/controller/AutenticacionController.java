@@ -5,6 +5,7 @@ import ovh.emserv.librarium.dto.RegistroPeticion;
 import ovh.emserv.librarium.dto.TokenRespuesta;
 import ovh.emserv.librarium.entity.Usuario;
 import ovh.emserv.librarium.exception.ConflictoException;
+import ovh.emserv.librarium.exception.CredencialesInvalidasException;
 import ovh.emserv.librarium.repository.UsuarioRepository;
 import ovh.emserv.librarium.service.ServicioJwt;
 import jakarta.validation.Valid;
@@ -67,7 +68,7 @@ public class AutenticacionController {
             return ResponseEntity.ok(new TokenRespuesta(token));
 
         } catch (AuthenticationException exception) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
+            throw new CredencialesInvalidasException();
         }
     }
 }
