@@ -41,21 +41,21 @@ public class ConfiguracionSeguridad {
     @Bean
     public SecurityFilterChain filtroDeSeguridad(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Desactivar CSRF para APIs REST[cite: 18]
+                .csrf(csrf -> csrf.disable()) // Desactivar CSRF para APIs REST
 
-                // RUTAS PERMITIDAS Y RESTRINGIDAS[cite: 18]
+                // RUTAS PERMITIDAS Y RESTRINGIDAS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // Login y registro públicos[cite: 18]
-                        .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll() // Catálogo de libros público[cite: 18]
-                        .anyRequest().authenticated() // Todo lo demás protegido[cite: 18]
+                        .requestMatchers("/api/auth/**").permitAll() // Login y registro públicos
+                        .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll() // Catálogo de libros público
+                        .anyRequest().authenticated() // Todo lo demás protegido
                 )
 
-                // MODO STATELESS (Sin estado)[cite: 18]
+                // MODO STATELESS (Sin estado)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // VALIDACIÓN AUTOMÁTICA DE TOKENS JWT[cite: 18]
+                // VALIDACIÓN AUTOMÁTICA DE TOKENS JWT
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(decodificadorJwt())

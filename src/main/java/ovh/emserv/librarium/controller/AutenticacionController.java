@@ -36,16 +36,16 @@ public class AutenticacionController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegistroPeticion peticion) {
-        // Verificar si el email ya existe[cite: 21]
+        // Verificar si el email ya existe
         if (usuarioRepository.findByEmail(peticion.email()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("El email ya está en uso");
         }
 
-        // Crear entidad Usuario[cite: 21]
+        // Crear entidad Usuario
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setUsername(peticion.username());
         nuevoUsuario.setEmail(peticion.email());
-        nuevoUsuario.setPasswordHash(codificadorContrasena.encode(peticion.password())); // Cifrado obligatorio[cite: 21]
+        nuevoUsuario.setPasswordHash(codificadorContrasena.encode(peticion.password())); // Cifrado obligatorio
         nuevoUsuario.setRol(Usuario.Rol.ROLE_USER);
 
         usuarioRepository.save(nuevoUsuario);
@@ -55,13 +55,13 @@ public class AutenticacionController {
     @PostMapping("/login")
     public ResponseEntity<?> iniciarSesion(@Valid @RequestBody LoginPeticion peticion) {
         try {
-            // Verificar email y contraseña en la base de datos[cite: 21]
+            // Verificar email y contraseña en la base de datos
             Authentication credencialesValidadas = gestorAutenticacion.authenticate(new UsernamePasswordAuthenticationToken(peticion.email(), peticion.password()));
 
-            // Generar el JWT[cite: 21]
+            // Generar el JWT
             String token = servicioJwt.generarToken(credencialesValidadas);
 
-            // Devolver el token al cliente[cite: 21]
+            // Devolver el token al cliente
             return ResponseEntity.ok(new TokenRespuesta(token));
 
         } catch (Exception e) {

@@ -18,20 +18,20 @@ import java.util.List;
 @Service
 public class ServicioJwt {
 
-    // Clave secreta segura generada para firmar los tokens[cite: 17]
+    // Clave secreta segura generada para firmar los tokens
     private final SecretKey claveSecreta = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private final long tiempoExpiracionMs = 86400000; // 24 horas
 
     public String generarToken(Authentication credencialesValidadas) {
-        // Obtenemos los roles (ej. ["ROLE_USER"])[cite: 17]
+        // Obtenemos los roles (ej. ["ROLE_USER"])
         List<String> roles = credencialesValidadas.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
-        return Jwts.builder().setSubject(credencialesValidadas.getName()) // El email del usuario[cite: 17]
-                .setIssuer("librarium-api") // Emisor del token[cite: 17]
-                .setIssuedAt(new Date()) // Fecha de creación[cite: 17]
-                .setExpiration(new Date(System.currentTimeMillis() + tiempoExpiracionMs)) // Fecha límite[cite: 17]
-                .claim("roles", roles) // Guardamos los roles como información extra[cite: 17]
-                .signWith(claveSecreta) // Firmamos[cite: 17]
+        return Jwts.builder().setSubject(credencialesValidadas.getName()) // El email del usuario
+                .setIssuer("librarium-api") // Emisor del token
+                .setIssuedAt(new Date()) // Fecha de creación
+                .setExpiration(new Date(System.currentTimeMillis() + tiempoExpiracionMs)) // Fecha límite
+                .claim("roles", roles) // Guardamos los roles como información extra
+                .signWith(claveSecreta) // Firmamos
                 .compact();
     }
 
