@@ -10,7 +10,7 @@ Librarium Marginalia es una API REST para:
 - buscar libros en Open Library;
 - importar un libro seleccionado;
 - registrar usuarios e iniciar sesión;
-- crear y consultar reseñas;
+- crear reseñas;
 - crear y consultar anotaciones;
 - crear y consultar hilos de foro y sus respuestas.
 
@@ -22,7 +22,7 @@ La aplicación está implementada con:
 - Spring Data JPA/Hibernate;
 - MySQL;
 - Spring Security;
-- JWT;
+- JWT (con clave generada al arrancar);
 - BCrypt;
 - Maven mediante `./mvnw`.
 
@@ -263,13 +263,6 @@ La clave externa es única para evitar duplicados.
 
 ## 8. Reseñas
 
-### Consultar reseñas
-
-```http
-GET /api/resenas
-GET /api/resenas?libroId=1
-```
-
 ### Crear reseña
 
 ```http
@@ -289,7 +282,7 @@ Content-Type: application/json
 
 La puntuación se valida entre 1 y 5 mediante Jakarta Validation y la restricción de base de datos.
 
-Actualmente solo están implementadas la consulta y la creación. No hay todavía edición, borrado, regla de reseña única por usuario/libro ni DTO de salida dedicado.
+Actualmente solo está implementada la creación. No hay todavía consulta, edición, borrado, regla de reseña única por usuario/libro ni DTO de salida dedicado.
 
 ## 9. Anotaciones
 
@@ -354,23 +347,23 @@ Las siguientes partes siguen pendientes:
 
 1. **Reseñas y anotaciones:** DTOs de salida, edición, borrado y permisos.
 2. **Foros:** endpoint para crear respuestas, paginación y moderación.
-3. **Errores HTTP:** falta un `@RestControllerAdvice` común para 400, 401, 403, 404 y 409.
-4. **Excepciones de dominio:** todavía existen `orElseThrow()` genéricos.
+3. **Errores HTTP:** `ManejoErrores` ya cubre validación, petición inválida, conflicto, acceso denegado, recurso no encontrado, integridad y Open Library.
+4. **Excepciones de dominio:** los servicios usan excepciones específicas del paquete `exception`.
 5. **JWT:** la clave debe persistir entre reinicios.
 6. **Pruebas automatizadas:** faltan tests unitarios, de repositorio, MockMvc y de integración.
 7. **CI:** todavía falta configurar compilación y tests automáticos en GitHub Actions.
 
 ## 12. Próximo orden de trabajo
 
-1. Implementar respuestas de foro.
+1. Mover la clave JWT a configuración segura estable.
 2. Añadir DTOs de salida para evitar exponer entidades y relaciones JPA.
-3. Aplicar permisos de propietario y administrador.
-4. Mover la clave JWT a configuración segura estable.
+3. Implementar consulta de reseñas y respuestas de foro.
+4. Aplicar permisos de propietario y administrador.
 5. Crear pruebas automatizadas.
 6. Documentar variables de entorno y configurar CI.
 
-El manejo global de errores ya está iniciado: `ManejoErrores` devuelve JSON uniforme
-para validaciones, recursos inexistentes, peticiones inválidas y conflictos de integridad.
+El manejo global de errores devuelve JSON uniforme para validaciones, recursos inexistentes,
+peticiones inválidas, conflictos de negocio o integridad, acceso denegado y fallos de Open Library.
 
 ## 13. Comprobación mínima manual
 

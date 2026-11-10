@@ -18,7 +18,7 @@ El backend está en `src/main/java/ovh/emserv/librarium/` y usa Java 25 con Spri
 
 La base de datos contiene `password_hash` y los roles `ROLE_USER` y `ROLE_ADMIN`. Toda implementación de registro debe usar `BCryptPasswordEncoder`; nunca guardar contraseñas en texto plano.
 
-El objetivo de seguridad es autenticación stateless con JWT y autorización por roles. Actualmente esta parte aún no está terminada: cualquier cambio que la implemente debe añadir configuración, filtro, servicio de tokens, carga de usuarios y endpoints de autenticación de forma coherente.
+La autenticación stateless con JWT, BCrypt y autorización por roles ya está implementada. `ServicioJwt` todavía genera la clave al arrancar; cualquier cambio de seguridad debe externalizarla sin guardar secretos en el repositorio.
 
 ## DTOs y respuestas
 
@@ -27,6 +27,7 @@ El objetivo de seguridad es autenticación stateless con JWT y autorización por
 - Evitar ciclos JSON causados por asociaciones JPA.
 - Validar las entradas con Jakarta Validation.
 - No permitir que el cliente establezca fechas de creación ni campos calculados.
+- Los errores de negocio deben usar excepciones del paquete `exception` y traducirse mediante `ManejoErrores`; no usar `IllegalArgumentException`, `SecurityException` ni `catch (Exception)` en servicios o controladores.
 
 ## Open Library
 
@@ -66,3 +67,4 @@ No inventar nombres alternativos sin actualizar conjuntamente el script SQL, las
 - El entorno de compilación debe disponer de un JDK compatible con Java 25.
 - Revisar `application.properties` antes de iniciar la aplicación.
 - No introducir secretos en código, documentación ni archivos versionados.
+- La configuración local usa MySQL en `localhost:3308` porque la base de datos se ejecuta en Docker; no cambiar ese puerto sin actualizar el contenedor y la documentación.

@@ -46,7 +46,14 @@ public class ConfiguracionSeguridad {
                 // RUTAS PERMITIDAS Y RESTRINGIDAS
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Login y registro públicos
-                        .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll() // Catálogo de libros público
+                        .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll()// Catálogo de libros público
+                        .requestMatchers(
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/error" // 👇 AÑADIMOS LA RUTA DE ERRORES DE SPRING
+                        ).permitAll()
                         .anyRequest().authenticated() // Todo lo demás protegido
                 )
 

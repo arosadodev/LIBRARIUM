@@ -4,12 +4,14 @@ import ovh.emserv.librarium.dto.LoginPeticion;
 import ovh.emserv.librarium.dto.RegistroPeticion;
 import ovh.emserv.librarium.dto.TokenRespuesta;
 import ovh.emserv.librarium.entity.Usuario;
+import ovh.emserv.librarium.exception.ConflictoException;
 import ovh.emserv.librarium.repository.UsuarioRepository;
 import ovh.emserv.librarium.service.ServicioJwt;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +40,7 @@ public class AutenticacionController {
     public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegistroPeticion peticion) {
         // Verificar si el email ya existe
         if (usuarioRepository.findByEmail(peticion.email()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("El email ya está en uso");
+            throw new ConflictoException("El email ya está en uso");
         }
 
         // Crear entidad Usuario
@@ -64,7 +66,7 @@ public class AutenticacionController {
             // Devolver el token al cliente
             return ResponseEntity.ok(new TokenRespuesta(token));
 
-        } catch (Exception e) {
+        } catch (AuthenticationException exception) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
         }
     }

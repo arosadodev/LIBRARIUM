@@ -6,6 +6,8 @@ import ovh.emserv.librarium.entity.Libro;
 import ovh.emserv.librarium.entity.Autor;
 import ovh.emserv.librarium.repository.AutorRepository;
 import ovh.emserv.librarium.repository.LibroRepository;
+import ovh.emserv.librarium.exception.PeticionInvalidaException;
+import ovh.emserv.librarium.exception.ServicioExternoException;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -42,7 +44,7 @@ public class OpenLibraryService {
 
     public List<OpenLibraryLibroDTO> buscar(String consulta) {
         if (consulta == null || consulta.isBlank()) {
-            throw new IllegalArgumentException("La consulta no puede estar vacía");
+            throw new PeticionInvalidaException("La consulta no puede estar vacía");
         }
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -55,14 +57,14 @@ public class OpenLibraryService {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
-                throw new IllegalStateException("Open Library respondió con HTTP " + response.statusCode());
+                throw new ServicioExternoException("Open Library respondió con HTTP " + response.statusCode());
             }
             return convertirResultados(response.body());
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("La consulta a Open Library fue interrumpida", exception);
+            throw new ServicioExternoException("La consulta a Open Library fue interrumpida", exception);
         } catch (IOException exception) {
-            throw new IllegalStateException("No se pudo consultar Open Library", exception);
+            throw new ServicioExternoException("No se pudo consultar Open Library", exception);
         }
     }
 
@@ -106,7 +108,7 @@ public class OpenLibraryService {
 
     private Libro crearLibro(OpenLibraryImportarDTO datos) {
         if (datos.title() == null || datos.title().isBlank()) {
-            throw new IllegalArgumentException("El título del libro es obligatorio");
+            throw new PeticionInvalidaException("El título del libro es obligatorio");
         }
 
         Libro libro = new Libro();

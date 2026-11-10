@@ -12,6 +12,7 @@ Librarium Marginalia es una plataforma colaborativa para reseñas, análisis lit
 - **Base de datos:** MySQL/MariaDB, configurada en `src/main/resources/application.properties`
 - **Validación:** Jakarta Validation
 - **JSON:** Jackson mediante Spring MVC
+- **Documentación API:** Springdoc OpenAPI/Swagger UI
 - **Código backend:** `src/main/java/ovh/emserv/librarium/`
 - **Aplicación existente:** `ovh.emserv.librarium.LibrariumApplication`
 
@@ -44,7 +45,6 @@ Las entidades usan JPA y Lombok. Las fechas se inicializan con `@PrePersist`. Lo
 - `GET /api/libros/buscar?q=...`
 - `GET /api/libros/buscar-externo?q=...`
 - `POST /api/libros/importar`
-- `GET /api/resenas?libroId=...`
 - `POST /api/resenas`
 - `GET /api/anotaciones?libroId=...`
 - `POST /api/anotaciones`
@@ -52,7 +52,7 @@ Las entidades usan JPA y Lombok. Las fechas se inicializan con `@PrePersist`. Lo
 - `POST /api/foros`
 - `GET /api/foros/{hiloId}/respuestas`
 
-La integración con Open Library se realiza actualmente mediante `java.net.http.HttpClient`. La búsqueda externa no persiste datos; la importación recibe el resultado seleccionado y lo guarda junto con sus autores. La autenticación JWT y la autorización por roles están preparadas como objetivo técnico, pero todavía deben terminar de implementarse en la API.
+La integración con Open Library se realiza actualmente mediante `java.net.http.HttpClient`. La búsqueda externa no persiste datos; la importación recibe el resultado seleccionado y lo guarda junto con sus autores. La autenticación JWT, BCrypt y la autorización por roles están operativas; la clave JWT todavía debe externalizarse para conservar los tokens entre reinicios.
 
 ## Modelo de datos
 
@@ -69,6 +69,13 @@ El esquema fuente es `database/scriptLibrarium.sql` y contiene ocho tablas:
 
 Las claves primarias del script SQL usan `BIGINT AUTO_INCREMENT`, compatible con `Long` en las entidades Java. `open_library_key` tiene una restricción `UNIQUE` para evitar duplicados.
 
+## Documentación interactiva
+
+Con la aplicación iniciada:
+
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- Documento OpenAPI: `http://localhost:8080/v3/api-docs`
+
 ## Configuración y ejecución
 
 1. Crear la base de datos ejecutando `database/scriptLibrarium.sql`.
@@ -80,10 +87,10 @@ No se deben versionar credenciales reales. La configuración local debe migrarse
 
 ## Próximos bloques técnicos
 
-1. Completar autenticación JWT, BCrypt y control de acceso.
+1. Externalizar la clave JWT y no regenerarla al reiniciar.
 2. Crear DTOs de respuesta para no exponer entidades ni `passwordHash`.
-3. Añadir creación de respuestas de foro y manejo centralizado de errores.
-4. Normalizar tipos y nombres de fechas entre SQL y entidades.
+3. Añadir consulta de reseñas y creación de respuestas de foro.
+4. Completar autorización de propietario y administrador.
 5. Añadir pruebas unitarias y de integración.
 
 La guía interna de ejecución está en [`PROCESOS.md`](PROCESOS.md). El seguimiento público de cada bloque se realiza mediante GitHub Issues.

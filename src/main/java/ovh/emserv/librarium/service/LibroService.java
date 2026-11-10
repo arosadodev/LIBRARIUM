@@ -3,6 +3,8 @@ package ovh.emserv.librarium.service;
 import ovh.emserv.librarium.dto.OpenLibraryImportarDTO;
 import ovh.emserv.librarium.entity.Autor;
 import ovh.emserv.librarium.entity.Libro;
+import ovh.emserv.librarium.exception.ConflictoException;
+import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 import ovh.emserv.librarium.repository.AutorRepository;
 import ovh.emserv.librarium.repository.LibroRepository;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class LibroService {
     public Libro importarDesdeOpenLibrary(OpenLibraryImportarDTO dto) {
         // 1. Evitar libros duplicados buscando por su clave de Open Library
         if (libroRepository.findByOpenLibraryKey(dto.key()).isPresent()) {
-            throw new IllegalArgumentException("El libro ya existe en el catálogo local");
+            throw new ConflictoException("El libro ya existe en el catálogo local");
         }
 
         // 2. Crear el libro y asociarle sus autores
@@ -52,7 +54,7 @@ public class LibroService {
 
     public Libro obtener(Long id) {
         return libroRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + id));
     }
 
     public List<Libro> buscar(String texto) {

@@ -28,10 +28,28 @@ public class ManejoErrores {
         return responder(HttpStatus.BAD_REQUEST, mensaje, request);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> peticionInvalida(IllegalArgumentException exception,
+    @ExceptionHandler(PeticionInvalidaException.class)
+    public ResponseEntity<ApiError> peticionInvalida(PeticionInvalidaException exception,
                                                       HttpServletRequest request) {
         return responder(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity<ApiError> conflictoDeNegocio(ConflictoException exception,
+                                                        HttpServletRequest request) {
+        return responder(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(AccesoDenegadoException.class)
+    public ResponseEntity<ApiError> accesoDenegado(AccesoDenegadoException exception,
+                                                    HttpServletRequest request) {
+        return responder(HttpStatus.FORBIDDEN, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ServicioExternoException.class)
+    public ResponseEntity<ApiError> servicioExterno(ServicioExternoException exception,
+                                                     HttpServletRequest request) {
+        return responder(HttpStatus.BAD_GATEWAY, exception.getMessage(), request);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

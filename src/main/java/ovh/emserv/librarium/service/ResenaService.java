@@ -6,6 +6,7 @@ import ovh.emserv.librarium.repository.LibroRepository;
 import ovh.emserv.librarium.repository.ResenaRepository;
 import ovh.emserv.librarium.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import ovh.emserv.librarium.exception.AccesoDenegadoException;
 import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 
 import java.util.List;
@@ -24,10 +25,10 @@ public class ResenaService {
 
     public Resena crearResenaSegura(ResenaDTO dto, String emailUsuario) {
         var libro = libroRepository.findById(dto.libroId())
-                .orElseThrow(() -> new IllegalArgumentException("Libro no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.libroId()));
 
         var usuario = usuarioRepository.findByEmail(emailUsuario)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + emailUsuario));
 
         Resena resena = new Resena();
         resena.setPuntuacion(dto.puntuacion());
@@ -41,10 +42,10 @@ public class ResenaService {
     public void borrarResena(Long idResena, String emailUsuarioLogueado) {
         // 1. Obtener la reseña y el usuario que hace la petición
         Resena resena = resenaRepository.findById(idResena)
-                .orElseThrow(() -> new IllegalArgumentException("La reseña no existe"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("La reseña no existe: " + idResena));
 
         var usuarioSolicitante = usuarioRepository.findByEmail(emailUsuarioLogueado)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario inválido"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + emailUsuarioLogueado));
 
         // 2. Comprobar permisos: ¿Es el dueño o es un administrador?
         boolean esElDueno = resena.getUsuario().getId().equals(usuarioSolicitante.getId());
@@ -52,7 +53,7 @@ public class ResenaService {
 
         if (!esElDueno && !esAdmin) {
             // Lanza una excepción (Puedes crear un AccesoDenegadoException personalizado si quieres)
-            throw new SecurityException("No tienes permisos para borrar esta reseña");
+            throw new AccesoDenegadoException("No tienes permisos para borrar esta reseña");
         }
 
         // 3. Si pasa la validación de seguridad, se borra
