@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#34231c">
   <meta name="description" content="Librarium Marginalia, un rincón para leer y conversar sobre libros">
   <title>Librarium Marginalia</title>
-  <link rel="icon" href="media/librarium-icon.svg" type="image/svg+xml">
+  <link rel="icon" href="/media/librarium-icon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
@@ -14,14 +14,12 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="topbar-inner">
-      <a class="brand" href="#inicio" data-page="inicio" aria-label="Librarium, ir al inicio"><img class="brand-mark" src="media/librarium-icon.svg" alt=""><span><strong>Librarium</strong><small>marginalia</small></span></a>
-      <button class="menu-button" id="menu-button" aria-label="Abrir menú" aria-controls="main-nav" aria-expanded="false"><span aria-hidden="true">☰</span></button>
-      <nav id="main-nav">
-        <a href="#inicio" data-page="inicio">Inicio</a><a href="#catalogo" data-page="catalogo">Libros</a><a href="#descubrir" data-page="descubrir">Personas</a><a href="#favoritos" data-page="favoritos">Mi biblioteca</a><a href="#comunidad" data-page="comunidad">Comunidad</a><a href="#anotaciones" data-page="anotaciones">Notas</a><a href="#mi-perfil" data-page="mi-perfil">Mi perfil</a><a href="#admin" data-page="admin" id="nav-admin" class="nav-admin-link" style="display: none;">♛ Admin</a>
-      </nav>
-      <button class="login-button" id="login-button">♙ <span>Entrar</span></button>
-    </div>
+    <a class="brand" href="#inicio" data-page="inicio"><span class="brand-mark">▱</span><span><strong>Librarium</strong><small>marginalia</small></span></a>
+    <button class="menu-button" id="menu-button" aria-label="Abrir menú">☰</button>
+    <nav id="main-nav">
+      <a href="#inicio" data-page="inicio">Inicio</a><a href="#catalogo" data-page="catalogo">Catálogo</a><a href="#descubrir" data-page="descubrir">Descubrir</a><a href="#favoritos" data-page="favoritos">Mis lecturas</a><a href="#comunidad" data-page="comunidad">Comunidad</a><a href="#anotaciones" data-page="anotaciones">Citas</a>
+    </nav>
+    <button class="login-button" id="login-button">♙ <span>Entrar</span></button>
   </header>
   <main id="app"></main>
   <footer>✦ Un rincón para quienes todavía leen con lápiz en la mano.</footer>

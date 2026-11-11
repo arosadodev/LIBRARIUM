@@ -97,6 +97,18 @@ Con la aplicación iniciada:
 
 No se deben versionar credenciales reales. La configuración local debe migrarse a variables de entorno o perfiles de Spring antes de publicar el proyecto.
 
+### Ejecución local con Docker
+
+Construir la imagen del backend desde la raíz del proyecto:
+
+```bash
+docker build -t librarium-api .
+```
+
+`mysql` debe ser el nombre o alias de red del contenedor MySQL. No se debe copiar `.env` dentro de la imagen ni publicar secretos en el repositorio.
+
+Para el despliegue de producción existe una guía operativa separada y privada, fuera del contenido público del repositorio. La carpeta `deploy/` está ignorada por Git para evitar publicar infraestructura, dominios internos o variables de operación.
+
 ## Próximos bloques técnicos
 
 1. Añadir más pruebas de integración MockMvc y repositorios.
