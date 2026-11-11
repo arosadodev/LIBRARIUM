@@ -1,6 +1,9 @@
 HELP.md
 target/
 .env
+.env.*
+!.env.example
+!.env.production.example
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -32,3 +35,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Material privado de despliegue (no publicar en GitHub)
+/deploy/

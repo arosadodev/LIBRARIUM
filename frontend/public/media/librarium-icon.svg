@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title>Icono de Librarium</title>
+  <circle cx="64" cy="64" r="60" fill="#704c39"/>
+  <path d="M37 31h38c8 0 14 6 14 14v52H51c-8 0-14-6-14-14V31Z" fill="#f9edda"/>
+  <path d="M51 31v52c0 8 6 14 14 14h24" fill="none" stroke="#a9573f" stroke-width="6"/>
+  <path d="M47 48h29M47 62h29" fill="none" stroke="#704c39" stroke-linecap="round" stroke-width="5"/>
+</svg>

@@ -11,8 +11,8 @@ Librarium Marginalia es una API REST para:
 - importar un libro seleccionado;
 - registrar usuarios e iniciar sesión;
 - crear, consultar, editar y borrar reseñas;
-- crear y consultar anotaciones;
-- crear y consultar hilos de foro y sus respuestas.
+- crear, consultar, editar y borrar anotaciones;
+- crear, consultar, editar y borrar hilos de foro y sus respuestas.
 
 La aplicación está implementada con:
 
@@ -179,6 +179,8 @@ Authorization: Bearer <token>
 
 `ServicioJwt` carga una clave Base64 persistente desde `LIBRARIUM_JWT_SECRET`. La aplicación no debe arrancarse sin esa variable en entornos reales.
 
+El registro público solo crea usuarios `ROLE_USER`. La promoción controlada a `ROLE_ADMIN` se realiza directamente en MySQL y está documentada en `admin.md`; el frontend no puede crear administradores.
+
 ## 6. Libros locales
 
 ### Listar libros
@@ -282,7 +284,7 @@ Content-Type: application/json
 
 La puntuación se valida entre 1 y 5 mediante Jakarta Validation y la restricción de base de datos.
 
-Actualmente solo está implementada la creación. No hay todavía consulta, edición, borrado, regla de reseña única por usuario/libro ni DTO de salida dedicado.
+La API devuelve DTOs de salida y ofrece consulta, edición y borrado con permisos de propietario o administrador. La base de datos mantiene una reseña única por usuario y libro.
 
 ## 9. Anotaciones
 
@@ -312,7 +314,7 @@ libroId
 usuarioId
 ```
 
-Actualmente no hay edición, borrado, permisos por propietario ni DTO de salida separado.
+La API ofrece edición y borrado con permisos de propietario o administrador y devuelve DTOs sin datos sensibles.
 
 ## 10. Foros
 
@@ -378,3 +380,5 @@ Para comprobar el flujo principal:
 8. Repetir la importación y comprobar que no se duplica.
 9. Crear una reseña, una anotación y un hilo usando el mismo JWT.
 10. Consultar los recursos creados.
+
+En producción, el frontend se sirve desde `https://librarium.emserv.ovh` y consume la API en `https://api.librarium.emserv.ovh`.
