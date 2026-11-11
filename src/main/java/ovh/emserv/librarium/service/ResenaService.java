@@ -96,6 +96,6 @@ public class ResenaService {
     private ResenaRespuestaDTO convertir(Resena resena) {
         return new ResenaRespuestaDTO(resena.getId(), resena.getPuntuacion(), resena.getComentario(),
                 resena.getFechaRegistro(), resena.getLibro().getId(),
-                new UsuarioResumenDTO(resena.getUsuario().getId(), resena.getUsuario().getUsername()));
+                new UsuarioResumenDTO(resena.getUsuario().getId(), resena.getUsuario().getPublicUsername(), resena.getUsuario().getDescripcion()));
     }
 }

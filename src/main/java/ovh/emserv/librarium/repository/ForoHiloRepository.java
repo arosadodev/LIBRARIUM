@@ -11,4 +11,5 @@ import java.util.List;
  */
 public interface ForoHiloRepository extends JpaRepository<ForoHilo, Long> {
     List<ForoHilo> findByLibroId(Long libroId);
+    List<ForoHilo> findByUsuarioId(Long usuarioId);
 }

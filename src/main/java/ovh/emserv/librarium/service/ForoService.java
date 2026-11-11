@@ -115,12 +115,16 @@ public class ForoService {
     private ForoHiloRespuestaDTO convertirHilo(ForoHilo hilo) {
         return new ForoHiloRespuestaDTO(hilo.getId(), hilo.getTituloHilo(), hilo.getContenidoInicial(),
                 hilo.getFechaCreacion(), hilo.getLibro().getId(),
-                new UsuarioResumenDTO(hilo.getUsuario().getId(), hilo.getUsuario().getUsername()));
+                new UsuarioResumenDTO(hilo.getUsuario().getId(), hilo.getUsuario().getPublicUsername(), hilo.getUsuario().getDescripcion()));
+    }
+
+    public ForoHiloRespuestaDTO convertirPublico(ForoHilo hilo) {
+        return convertirHilo(hilo);
     }
 
     private ForoRespuestaSalidaDTO convertirRespuesta(ForoRespuesta respuesta) {
         return new ForoRespuestaSalidaDTO(respuesta.getId(), respuesta.getContenido(), respuesta.getFechaCreacion(),
                 respuesta.getHilo().getId(),
-                new UsuarioResumenDTO(respuesta.getUsuario().getId(), respuesta.getUsuario().getUsername()));
+                new UsuarioResumenDTO(respuesta.getUsuario().getId(), respuesta.getUsuario().getPublicUsername(), respuesta.getUsuario().getDescripcion()));
     }
 }

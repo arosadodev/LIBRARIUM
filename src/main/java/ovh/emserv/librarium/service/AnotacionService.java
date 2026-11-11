@@ -33,6 +33,10 @@ public class AnotacionService {
                 .stream().map(this::convertir).toList();
     }
 
+    public List<AnotacionRespuestaDTO> listarPublicas(Long usuarioId) {
+        return repository.findByUsuarioId(usuarioId).stream().map(this::convertir).toList();
+    }
+
     public AnotacionRespuestaDTO crear(AnotacionDTO dto, String email) {
         Anotacion anotacion = new Anotacion();
         anotacion.setCapituloNumero(dto.getCapituloNumero());
@@ -81,6 +85,6 @@ public class AnotacionService {
     private AnotacionRespuestaDTO convertir(Anotacion anotacion) {
         return new AnotacionRespuestaDTO(anotacion.getId(), anotacion.getCapituloNumero(), anotacion.getPagina(),
                 anotacion.getTipo(), anotacion.getContenido(), anotacion.getFechaCreacion(), anotacion.getLibro().getId(),
-                new UsuarioResumenDTO(anotacion.getUsuario().getId(), anotacion.getUsuario().getUsername()));
+                new UsuarioResumenDTO(anotacion.getUsuario().getId(), anotacion.getUsuario().getPublicUsername(), anotacion.getUsuario().getDescripcion()));
     }
 }

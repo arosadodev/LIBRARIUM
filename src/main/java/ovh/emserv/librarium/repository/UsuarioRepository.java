@@ -4,6 +4,7 @@ import ovh.emserv.librarium.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * @author mit
@@ -11,6 +12,11 @@ import java.util.Optional;
  */
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByUsername(String username);
+    Optional<Usuario> findByUsernameIgnoreCase(String username);
     Optional<Usuario> findByEmail(String email);
     boolean existsByEmail(String email);
+    boolean existsByUsername(String username);
+    boolean existsByUsernameIgnoreCase(String username);
+    List<Usuario> findTop50ByUsernameContainingIgnoreCaseOrderByUsernameAsc(String username);
+    List<Usuario> findTop50ByOrderByUsernameAsc();
 }

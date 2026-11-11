@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Instant;
 
@@ -44,16 +45,22 @@ public class ConfiguracionSeguridad {
     public SecurityFilterChain filtroDeSeguridad(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // Desactivar CSRF para APIs REST
+                .cors(Customizer.withDefaults())
 
                 // RUTAS PERMITIDAS Y RESTRINGIDAS
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll() // Login y registro públicos
                         .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll()// Catálogo de libros público
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/**").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/actuator/health",
+                                "/actuator/health/**",
                                 "/error" // 👇 AÑADIMOS LA RUTA DE ERRORES DE SPRING
                         ).permitAll()
                         .anyRequest().authenticated() // Todo lo demás protegido

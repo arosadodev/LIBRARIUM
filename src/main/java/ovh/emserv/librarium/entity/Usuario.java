@@ -1,6 +1,8 @@
 package ovh.emserv.librarium.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,14 +32,20 @@ public class Usuario implements UserDetails {
     private String username;
 
     @Column(nullable = false, unique = true, length = 100)
+    @JsonIgnore
     private String email;
 
     @Column(name = "password_hash", nullable = false, length = 250)
+    @JsonIgnore
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @JsonIgnore
     private Rol rol = Rol.ROLE_USER;
+
+    @Column(name = "descripcion", columnDefinition = "TEXT")
+    private String descripcion;
 
     @Column(name = "fecha_registro", updatable = false)
     private LocalDateTime fechaRegistro;
@@ -50,19 +58,27 @@ public class Usuario implements UserDetails {
     public enum Rol {ROLE_USER, ROLE_ADMIN}
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Convierte el Enum Rol a la autoridad que entiende Spring (ej. "ROLE_USER")[cite: 15]
         return List.of(new SimpleGrantedAuthority(this.rol.name()));
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() {
         return this.passwordHash; // Spring usará esto para comparar la contraseña[cite: 15]
     }
 
     @Override
+    @JsonIgnore
     public String getUsername() {
-        return this.email; // Usamos el email como identificador para el login[cite: 15]
+        return this.email; // Usamos el email como identificador para el login
+    }
+
+    @JsonProperty("username")
+    public String getPublicUsername() {
+        return this.username;
     }
 
     // El sistema confiará en que la cuenta está activa[cite: 15]

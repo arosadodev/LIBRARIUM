@@ -39,15 +39,20 @@ public class AutenticacionController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegistroPeticion peticion) {
+        String username = peticion.username().trim();
+        String email = peticion.email().trim().toLowerCase(java.util.Locale.ROOT);
         // Verificar si el email ya existe
-        if (usuarioRepository.findByEmail(peticion.email()).isPresent()) {
+        if (usuarioRepository.findByEmail(email).isPresent()) {
             throw new ConflictoException("El email ya está en uso");
+        }
+        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
+            throw new ConflictoException("El nombre de usuario ya está en uso");
         }
 
         // Crear entidad Usuario
         Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setUsername(peticion.username());
-        nuevoUsuario.setEmail(peticion.email());
+        nuevoUsuario.setUsername(username);
+        nuevoUsuario.setEmail(email);
         nuevoUsuario.setPasswordHash(codificadorContrasena.encode(peticion.password())); // Cifrado obligatorio
         nuevoUsuario.setRol(Usuario.Rol.ROLE_USER);
 
@@ -58,14 +63,17 @@ public class AutenticacionController {
     @PostMapping("/login")
     public ResponseEntity<?> iniciarSesion(@Valid @RequestBody LoginPeticion peticion) {
         try {
+            String email = peticion.email().trim().toLowerCase(java.util.Locale.ROOT);
             // Verificar email y contraseña en la base de datos
-            Authentication credencialesValidadas = gestorAutenticacion.authenticate(new UsernamePasswordAuthenticationToken(peticion.email(), peticion.password()));
+            Authentication credencialesValidadas = gestorAutenticacion.authenticate(new UsernamePasswordAuthenticationToken(email, peticion.password()));
 
             // Generar el JWT
             String token = servicioJwt.generarToken(credencialesValidadas);
 
             // Devolver el token al cliente
-            return ResponseEntity.ok(new TokenRespuesta(token));
+            Usuario usuario = usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> new CredencialesInvalidasException());
+            return ResponseEntity.ok(new TokenRespuesta(token, usuario.getPublicUsername()));
 
         } catch (AuthenticationException exception) {
             throw new CredencialesInvalidasException();

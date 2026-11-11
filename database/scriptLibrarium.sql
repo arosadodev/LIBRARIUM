@@ -12,6 +12,7 @@ CREATE TABLE usuarios
     email          VARCHAR(100)                    NOT NULL UNIQUE,
     password_hash  VARCHAR(250)                    NOT NULL,
     rol            ENUM ('ROLE_USER','ROLE_ADMIN') NOT NULL DEFAULT 'ROLE_USER',
+    descripcion    TEXT,
     fecha_registro DATETIME                                 default CURRENT_TIMESTAMP
 );
 
