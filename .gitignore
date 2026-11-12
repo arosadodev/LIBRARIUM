@@ -34,5 +34,8 @@ build/
 ### VS Code ###
 .vscode/
 
+# Workflows locales: no publicar configuración con claves de CI.
+.github/workflows/
+
 # Material privado de despliegue (no publicar en GitHub)
 /deploy/
