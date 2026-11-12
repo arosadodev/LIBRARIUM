@@ -45,7 +45,7 @@ public class AutenticacionController {
         if (usuarioRepository.findByEmail(email).isPresent()) {
             throw new ConflictoException("El email ya está en uso");
         }
-        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
+        if (usuarioRepository.existsByUsername(username)) {
             throw new ConflictoException("El nombre de usuario ya está en uso");
         }
 
@@ -63,17 +63,16 @@ public class AutenticacionController {
     @PostMapping("/login")
     public ResponseEntity<?> iniciarSesion(@Valid @RequestBody LoginPeticion peticion) {
         try {
-            String email = peticion.email().trim().toLowerCase(java.util.Locale.ROOT);
-            // Verificar email y contraseña en la base de datos
-            Authentication credencialesValidadas = gestorAutenticacion.authenticate(new UsernamePasswordAuthenticationToken(email, peticion.password()));
+            String username = peticion.username().trim();
+            Authentication credencialesValidadas = gestorAutenticacion.authenticate(new UsernamePasswordAuthenticationToken(username, peticion.password()));
 
             // Generar el JWT
             String token = servicioJwt.generarToken(credencialesValidadas);
 
             // Devolver el token al cliente
-            Usuario usuario = usuarioRepository.findByEmail(email)
+            Usuario usuario = usuarioRepository.findByUsername(username)
                     .orElseThrow(() -> new CredencialesInvalidasException());
-            return ResponseEntity.ok(new TokenRespuesta(token, usuario.getPublicUsername()));
+            return ResponseEntity.ok(new TokenRespuesta(token, usuario.getPublicUsername(), usuario.getRol().name()));
 
         } catch (AuthenticationException exception) {
             throw new CredencialesInvalidasException();

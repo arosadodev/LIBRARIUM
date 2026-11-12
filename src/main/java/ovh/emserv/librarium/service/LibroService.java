@@ -15,10 +15,13 @@ import java.util.List;
 public class LibroService {
     private final LibroRepository libroRepository;
     private final AutorRepository autorRepository;
+    private final OpenLibraryService openLibraryService;
 
-    public LibroService(LibroRepository libroRepository, AutorRepository autorRepository) {
+    public LibroService(LibroRepository libroRepository, AutorRepository autorRepository,
+                        OpenLibraryService openLibraryService) {
         this.libroRepository = libroRepository;
         this.autorRepository = autorRepository;
+        this.openLibraryService = openLibraryService;
     }
 
     public Libro importarDesdeOpenLibrary(OpenLibraryImportarDTO dto) {
@@ -34,6 +37,12 @@ public class LibroService {
         nuevoLibro.setIsbn(dto.isbn());
         nuevoLibro.setAnoPublicacion(dto.firstPublishYear());
         nuevoLibro.setPortadaUrl(dto.coverUrl());
+
+        String sinopsis = dto.sinopsis();
+        if ((sinopsis == null || sinopsis.isBlank()) && dto.key() != null && !dto.key().isBlank()) {
+            sinopsis = openLibraryService.obtenerSinopsis(dto.key());
+        }
+        nuevoLibro.setSinopsis(sinopsis);
 
         if (dto.authors() == null || dto.authors().isEmpty()) {
             nuevoLibro.getAutores().add(obtenerOCrearAutor("Autor desconocido"));
@@ -53,8 +62,20 @@ public class LibroService {
     }
 
     public Libro obtener(Long id) {
-        return libroRepository.findById(id)
+        Libro libro = libroRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + id));
+        if ((libro.getSinopsis() == null || libro.getSinopsis().isBlank())
+                && libro.getOpenLibraryKey() != null && !libro.getOpenLibraryKey().isBlank()) {
+            try {
+                String sinopsis = openLibraryService.obtenerSinopsis(libro.getOpenLibraryKey());
+                if (sinopsis != null && !sinopsis.isBlank()) {
+                    libro.setSinopsis(sinopsis);
+                    libro = libroRepository.save(libro);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return libro;
     }
 
     public List<Libro> buscar(String texto) {

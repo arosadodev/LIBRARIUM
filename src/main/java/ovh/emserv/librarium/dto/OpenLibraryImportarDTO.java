@@ -10,6 +10,7 @@ public record OpenLibraryImportarDTO(
         List<String> authors,
         String isbn,
         Integer firstPublishYear,
-        String coverUrl
+        String coverUrl,
+        String sinopsis
 ) {
 }

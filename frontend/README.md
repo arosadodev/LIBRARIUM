@@ -9,10 +9,10 @@ npm install
 npm run dev
 ```
 
-`config.js` usa `http://localhost:8080` en desarrollo y selecciona automáticamente la API de producción cuando el frontend se sirve en `librarium.emserv.ovh`:
+`config.js` usa `http://localhost:8080` en desarrollo y selecciona automáticamente el mismo origen (`''`) cuando el frontend se sirve en `librarium.emserv.ovh`:
 
 ```js
-apiUrl: 'https://api.librarium.emserv.ovh'
+apiUrl: ''
 ```
 
 Para publicar, ejecuta `npm run build` y sube la carpeta `dist/` a `https://librarium.emserv.ovh`. El icono de Librarium está en `public/media/`; las portadas se cargan únicamente desde los datos de cada libro.

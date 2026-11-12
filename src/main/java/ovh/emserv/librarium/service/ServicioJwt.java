@@ -38,7 +38,7 @@ public class ServicioJwt {
         // Obtenemos los roles (ej. ["ROLE_USER"])
         List<String> roles = credencialesValidadas.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
 
-        return Jwts.builder().setSubject(credencialesValidadas.getName()) // El email del usuario
+        return Jwts.builder().setSubject(credencialesValidadas.getName()) // El nick del usuario
                 .setIssuer("librarium-api") // Emisor del token
                 .setIssuedAt(new Date()) // Fecha de creación
                 .setExpiration(new Date(System.currentTimeMillis() + tiempoExpiracionMs)) // Fecha límite

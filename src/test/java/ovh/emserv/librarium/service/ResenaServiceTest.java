@@ -36,10 +36,10 @@ class ResenaServiceTest {
         Usuario usuario = new Usuario();
         usuario.setId(7L);
         when(libroRepository.findById(3L)).thenReturn(Optional.of(new Libro()));
-        when(usuarioRepository.findByEmail("user@test.local")).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByUsername("usernick")).thenReturn(Optional.of(usuario));
         when(resenaRepository.existsByLibroIdAndUsuarioId(3L, 7L)).thenReturn(true);
 
         assertThrows(ConflictoException.class,
-                () -> service.crearResenaSegura(new ResenaDTO(5, "texto", 3L), "user@test.local"));
+                () -> service.crearResenaSegura(new ResenaDTO(5, "texto", 3L), "usernick"));
     }
 }

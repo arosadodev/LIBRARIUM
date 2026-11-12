@@ -70,7 +70,89 @@ public class OpenLibraryService {
 
     public Libro importar(OpenLibraryImportarDTO datos) {
         return libroRepository.findByOpenLibraryKey(datos.key())
+                .map(existente -> {
+                    if (existente.getSinopsis() == null || existente.getSinopsis().isBlank()) {
+                        String sinopsis = datos.sinopsis();
+                        if (sinopsis == null || sinopsis.isBlank()) {
+                            sinopsis = obtenerSinopsis(datos.key());
+                        }
+                        if (sinopsis != null && !sinopsis.isBlank()) {
+                            existente.setSinopsis(sinopsis);
+                            return libroRepository.save(existente);
+                        }
+                    }
+                    return existente;
+                })
                 .orElseGet(() -> libroRepository.save(crearLibro(datos)));
+    }
+
+    public String obtenerSinopsis(String key) {
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+        String path = key.startsWith("/") ? key : "/" + key;
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://openlibrary.org" + path + ".json"))
+                .timeout(Duration.ofSeconds(6))
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                return extraerSinopsisDeDetalle(response.body());
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private String extraerSinopsisDeDetalle(String json) {
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            return extraerSinopsis(root);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String extraerSinopsis(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        JsonNode desc = node.get("description");
+        if (desc != null && !desc.isNull()) {
+            if (desc.isTextual() && !desc.asText().isBlank()) {
+                return desc.asText().trim();
+            }
+            if (desc.isObject() && desc.has("value") && !desc.get("value").asText().isBlank()) {
+                return desc.get("value").asText().trim();
+            }
+            if (desc.isArray() && desc.size() > 0) {
+                String first = desc.get(0).asText();
+                if (!first.isBlank()) {
+                    return first.trim();
+                }
+            }
+        }
+
+        JsonNode firstSentence = node.get("first_sentence");
+        if (firstSentence != null && !firstSentence.isNull()) {
+            if (firstSentence.isArray() && firstSentence.size() > 0) {
+                String sentence = firstSentence.get(0).asText();
+                if (!sentence.isBlank()) {
+                    return sentence.trim();
+                }
+            } else if (firstSentence.isTextual() && !firstSentence.asText().isBlank()) {
+                return firstSentence.asText().trim();
+            } else if (firstSentence.isObject() && firstSentence.has("value") && !firstSentence.get("value").asText().isBlank()) {
+                return firstSentence.get("value").asText().trim();
+            }
+        }
+
+        return null;
     }
 
     private List<OpenLibraryLibroDTO> convertirResultados(String json) throws IOException {
@@ -94,13 +176,16 @@ public class OpenLibraryService {
                     ? null
                     : "https://covers.openlibrary.org/b/id/" + coverId + "-L.jpg";
 
+            String sinopsis = extraerSinopsis(doc);
+
             resultados.add(new OpenLibraryLibroDTO(
                     key,
                     title,
                     authors,
                     isbns.isEmpty() ? null : isbns.get(0),
                     doc.has("first_publish_year") ? doc.get("first_publish_year").asInt() : null,
-                    coverUrl
+                    coverUrl,
+                    sinopsis
             ));
         }
         return resultados;
@@ -122,6 +207,12 @@ public class OpenLibraryService {
         libro.setIsbn(datos.isbn());
         libro.setAnoPublicacion(datos.firstPublishYear());
         libro.setPortadaUrl(datos.coverUrl());
+
+        String sinopsis = datos.sinopsis();
+        if ((sinopsis == null || sinopsis.isBlank()) && datos.key() != null && !datos.key().isBlank()) {
+            sinopsis = obtenerSinopsis(datos.key());
+        }
+        libro.setSinopsis(sinopsis);
         return libro;
     }
 

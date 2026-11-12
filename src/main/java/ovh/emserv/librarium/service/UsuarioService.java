@@ -33,20 +33,34 @@ public class UsuarioService {
     }
 
     public List<UsuarioResumenDTO> buscar(String query) {
+        return buscar(query, null, false);
+    }
+
+    public List<UsuarioResumenDTO> buscar(String query, String usuarioSolicitante, boolean esAdministrador) {
         String normalizada = query == null ? "" : query.trim();
         List<Usuario> encontrados = normalizada.length() < 2
                 ? usuarios.findTop50ByOrderByUsernameAsc()
                 : usuarios.findTop50ByUsernameContainingIgnoreCaseOrderByUsernameAsc(normalizada);
-        return encontrados.stream().map(this::resumen).toList();
+        return encontrados.stream()
+                .map(usuario -> resumen(usuario, esAdministrador || esPropietario(usuario, usuarioSolicitante)))
+                .toList();
     }
 
     public UsuarioPerfilDTO obtenerPerfil(String username) {
+        return obtenerPerfil(username, null, false);
+    }
+
+    public UsuarioPerfilDTO obtenerPerfil(String username, String usuarioSolicitante, boolean esAdministrador) {
         String nick = username == null ? "" : username.trim();
-        Usuario usuario = usuarios.findByUsernameIgnoreCase(nick)
+        Usuario usuario = usuarios.findByUsername(nick)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + username));
+        return construirPerfil(usuario, esAdministrador || esPropietario(usuario, usuarioSolicitante));
+    }
+
+    private UsuarioPerfilDTO construirPerfil(Usuario usuario, boolean incluirEmail) {
         Long id = usuario.getId();
         return new UsuarioPerfilDTO(
-                resumen(usuario),
+                resumen(usuario, incluirEmail),
                 usuario.getDescripcion(),
                 usuario.getFechaRegistro(),
                 resenaService.listar(null, id),
@@ -55,15 +69,15 @@ public class UsuarioService {
         );
     }
 
-    public UsuarioPerfilDTO obtenerPerfilActual(String email) {
-        Usuario usuario = usuarios.findByEmail(email)
+    public UsuarioPerfilDTO obtenerPerfilActual(String username) {
+        Usuario usuario = usuarios.findByUsername(username)
                 .orElseThrow(() -> new RecursoNoEncontradoException("La sesión no corresponde a una cuenta disponible"));
-        return obtenerPerfil(usuario.getPublicUsername());
+        return construirPerfil(usuario, true);
     }
 
     @Transactional
-    public UsuarioPerfilDTO actualizarPerfilActual(String email, UsuarioActualizacionDTO peticion) {
-        Usuario usuario = usuarios.findByEmail(email)
+    public UsuarioPerfilDTO actualizarPerfilActual(String username, UsuarioActualizacionDTO peticion) {
+        Usuario usuario = usuarios.findByUsername(username)
                 .orElseThrow(() -> new RecursoNoEncontradoException("La sesión no corresponde a una cuenta disponible"));
 
         if (peticion.username() != null && !peticion.username().trim().isEmpty()) {
@@ -72,7 +86,7 @@ public class UsuarioService {
                 throw new PeticionInvalidaException("El nombre de usuario debe tener entre 3 y 50 caracteres");
             }
             if (!nuevoUsername.equals(usuario.getPublicUsername())) {
-                if (!nuevoUsername.equalsIgnoreCase(usuario.getPublicUsername()) && usuarios.existsByUsernameIgnoreCase(nuevoUsername)) {
+                if (usuarios.existsByUsername(nuevoUsername)) {
                     throw new ConflictoException("El nombre de usuario ya está en uso");
                 }
                 usuario.setUsername(nuevoUsername);
@@ -88,10 +102,19 @@ public class UsuarioService {
         }
 
         usuarios.save(usuario);
-        return obtenerPerfil(usuario.getPublicUsername());
+        return construirPerfil(usuario, true);
     }
 
     private UsuarioResumenDTO resumen(Usuario usuario) {
-        return new UsuarioResumenDTO(usuario.getId(), usuario.getPublicUsername(), usuario.getDescripcion());
+        return resumen(usuario, false);
+    }
+
+    private UsuarioResumenDTO resumen(Usuario usuario, boolean incluirEmail) {
+        return new UsuarioResumenDTO(usuario.getId(), usuario.getPublicUsername(), usuario.getDescripcion(),
+                incluirEmail ? usuario.getEmail() : null);
+    }
+
+    private boolean esPropietario(Usuario usuario, String usuarioSolicitante) {
+        return usuarioSolicitante != null && usuario.getPublicUsername().equals(usuarioSolicitante);
     }
 }

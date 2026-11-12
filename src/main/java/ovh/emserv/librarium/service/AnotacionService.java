@@ -37,7 +37,7 @@ public class AnotacionService {
         return repository.findByUsuarioId(usuarioId).stream().map(this::convertir).toList();
     }
 
-    public AnotacionRespuestaDTO crear(AnotacionDTO dto, String email) {
+    public AnotacionRespuestaDTO crear(AnotacionDTO dto, String username) {
         Anotacion anotacion = new Anotacion();
         anotacion.setCapituloNumero(dto.getCapituloNumero());
         anotacion.setPagina(dto.getPagina());
@@ -45,13 +45,13 @@ public class AnotacionService {
         anotacion.setContenido(dto.getContenido());
         anotacion.setLibro(libros.findById(dto.getLibroId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.getLibroId())));
-        anotacion.setUsuario(obtenerUsuario(email));
+        anotacion.setUsuario(obtenerUsuario(username));
         return convertir(repository.save(anotacion));
     }
 
-    public AnotacionRespuestaDTO actualizar(Long id, AnotacionDTO dto, String email) {
+    public AnotacionRespuestaDTO actualizar(Long id, AnotacionDTO dto, String username) {
         Anotacion anotacion = obtener(id);
-        comprobarPermiso(anotacion.getUsuario(), email);
+        comprobarPermiso(anotacion.getUsuario(), username);
         anotacion.setCapituloNumero(dto.getCapituloNumero());
         anotacion.setPagina(dto.getPagina());
         anotacion.setTipo(dto.getTipo());
@@ -59,9 +59,9 @@ public class AnotacionService {
         return convertir(repository.save(anotacion));
     }
 
-    public void borrar(Long id, String email) {
+    public void borrar(Long id, String username) {
         Anotacion anotacion = obtener(id);
-        comprobarPermiso(anotacion.getUsuario(), email);
+        comprobarPermiso(anotacion.getUsuario(), username);
         repository.delete(anotacion);
     }
 
@@ -70,13 +70,13 @@ public class AnotacionService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Anotación no encontrada: " + id));
     }
 
-    private Usuario obtenerUsuario(String email) {
-        return usuarios.findByEmail(email)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + email));
+    private Usuario obtenerUsuario(String username) {
+        return usuarios.findByUsername(username)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + username));
     }
 
-    private void comprobarPermiso(Usuario propietario, String email) {
-        Usuario solicitante = obtenerUsuario(email);
+    private void comprobarPermiso(Usuario propietario, String username) {
+        Usuario solicitante = obtenerUsuario(username);
         if (!propietario.getId().equals(solicitante.getId()) && solicitante.getRol() != Usuario.Rol.ROLE_ADMIN) {
             throw new AccesoDenegadoException("No tienes permisos sobre esta anotación");
         }

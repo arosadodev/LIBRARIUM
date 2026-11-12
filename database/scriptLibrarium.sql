@@ -8,7 +8,7 @@ USE librarium_db;
 CREATE TABLE usuarios
 (
     id             BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username       VARCHAR(50)                     NOT NULL UNIQUE,
+    username       VARCHAR(50) COLLATE utf8mb4_bin NOT NULL UNIQUE,
     email          VARCHAR(100)                    NOT NULL UNIQUE,
     password_hash  VARCHAR(250)                    NOT NULL,
     rol            ENUM ('ROLE_USER','ROLE_ADMIN') NOT NULL DEFAULT 'ROLE_USER',
@@ -58,14 +58,14 @@ CREATE TABLE resenas
 
 CREATE TABLE anotaciones_guias
 (
-    id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-    libro_id        BIGINT                                   NOT NULL,
-    usuario_id      BIGINT                                   NOT NULL,
-    capitulo_numero INT,
-    pagina          INT,
-    tipo            ENUM ('CITA', 'ANALISIS', 'REFERENCIA') NOT NULL,
-    contenido       TEXT                                    NOT NULL,
-    fecha_registro  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+    libro_id         BIGINT NOT NULL,
+    usuario_id       BIGINT NOT NULL,
+    capitulo_numero  INT,
+    pagina           INT,
+    tipo             ENUM ('CITA', 'RESUMEN', 'REFLEXION', 'OTRO') default 'OTRO',
+    contenido        TEXT   NOT NULL,
+    fecha_creacion   DATETIME                                      default CURRENT_TIMESTAMP,
     FOREIGN KEY (libro_id) REFERENCES libros (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );
@@ -73,11 +73,11 @@ CREATE TABLE anotaciones_guias
 CREATE TABLE foro_hilos
 (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY,
-    libro_id          BIGINT         NOT NULL,
-    usuario_id       BIGINT         NOT NULL,
-    titulo_hilo       VARCHAR(200) NOT NULL,
+    libro_id          BIGINT       NOT NULL,
+    usuario_id        BIGINT       NOT NULL,
+    titulo_hilo       VARCHAR(255) NOT NULL,
     contenido_inicial TEXT         NOT NULL,
-    fecha_registro    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_creacion    DATETIME default CURRENT_TIMESTAMP,
     FOREIGN KEY (libro_id) REFERENCES libros (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );
@@ -87,8 +87,8 @@ CREATE TABLE foro_respuestas
     id             BIGINT AUTO_INCREMENT PRIMARY KEY,
     hilo_id        BIGINT NOT NULL,
     usuario_id     BIGINT NOT NULL,
-    contenido      TEXT NOT NULL,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    contenido      TEXT   NOT NULL,
+    fecha_creacion DATETIME default CURRENT_TIMESTAMP,
     FOREIGN KEY (hilo_id) REFERENCES foro_hilos (id) ON DELETE CASCADE,
     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
 );

@@ -20,13 +20,13 @@ public class UsuarioController {
     }
 
     @GetMapping
-    public List<UsuarioResumenDTO> listar(@RequestParam(required = false) String q) {
-        return service.buscar(q);
+    public List<UsuarioResumenDTO> listar(@RequestParam(required = false) String q, Authentication autenticacion) {
+        return service.buscar(q, usuarioAutenticado(autenticacion), esAdministrador(autenticacion));
     }
 
     @GetMapping("/buscar")
-    public List<UsuarioResumenDTO> buscar(@RequestParam String q) {
-        return service.buscar(q);
+    public List<UsuarioResumenDTO> buscar(@RequestParam String q, Authentication autenticacion) {
+        return service.buscar(q, usuarioAutenticado(autenticacion), esAdministrador(autenticacion));
     }
 
     @GetMapping("/me")
@@ -45,7 +45,20 @@ public class UsuarioController {
     }
 
     @GetMapping("/{username}")
-    public UsuarioPerfilDTO perfil(@PathVariable String username) {
-        return service.obtenerPerfil(username);
+    public UsuarioPerfilDTO perfil(@PathVariable String username, Authentication autenticacion) {
+        return service.obtenerPerfil(username, usuarioAutenticado(autenticacion), esAdministrador(autenticacion));
+    }
+
+    private String usuarioAutenticado(Authentication autenticacion) {
+        if (autenticacion == null || !autenticacion.isAuthenticated()
+                || "anonymousUser".equals(autenticacion.getName())) {
+            return null;
+        }
+        return autenticacion.getName();
+    }
+
+    private boolean esAdministrador(Authentication autenticacion) {
+        return usuarioAutenticado(autenticacion) != null && autenticacion.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }

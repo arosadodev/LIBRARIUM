@@ -1,22 +1,18 @@
 package ovh.emserv.librarium.service;
 
-import ovh.emserv.librarium.dto.ForoHiloDTO;
-import ovh.emserv.librarium.dto.ForoHiloRespuestaDTO;
-import ovh.emserv.librarium.dto.ForoRespuestaDTO;
-import ovh.emserv.librarium.dto.ForoRespuestaSalidaDTO;
-import ovh.emserv.librarium.dto.UsuarioResumenDTO;
+import ovh.emserv.librarium.dto.*;
 import ovh.emserv.librarium.entity.ForoHilo;
 import ovh.emserv.librarium.entity.ForoRespuesta;
 import ovh.emserv.librarium.entity.Usuario;
 import ovh.emserv.librarium.exception.AccesoDenegadoException;
+import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 import ovh.emserv.librarium.repository.ForoHiloRepository;
 import ovh.emserv.librarium.repository.ForoRespuestaRepository;
 import ovh.emserv.librarium.repository.LibroRepository;
 import ovh.emserv.librarium.repository.UsuarioRepository;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -27,7 +23,8 @@ public class ForoService {
     private final LibroRepository libros;
     private final UsuarioRepository usuarios;
 
-    public ForoService(ForoHiloRepository hilos, ForoRespuestaRepository respuestas, LibroRepository libros, UsuarioRepository usuarios) {
+    public ForoService(ForoHiloRepository hilos, ForoRespuestaRepository respuestas,
+                       LibroRepository libros, UsuarioRepository usuarios) {
         this.hilos = hilos;
         this.respuestas = respuestas;
         this.libros = libros;
@@ -39,13 +36,13 @@ public class ForoService {
                 .stream().map(this::convertirHilo).toList();
     }
 
-    public ForoHiloRespuestaDTO crear(ForoHiloDTO dto, String email) {
+    public ForoHiloRespuestaDTO crear(ForoHiloDTO dto, String username) {
         ForoHilo hilo = new ForoHilo();
         hilo.setTituloHilo(dto.getTituloHilo());
         hilo.setContenidoInicial(dto.getContenidoInicial());
         hilo.setLibro(libros.findById(dto.getLibroId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Libro no encontrado: " + dto.getLibroId())));
-        hilo.setUsuario(obtenerUsuario(email));
+        hilo.setUsuario(obtenerUsuario(username));
         return convertirHilo(hilos.save(hilo));
     }
 
@@ -54,39 +51,39 @@ public class ForoService {
         return respuestas.findByHiloId(hiloId, pageable).map(this::convertirRespuesta);
     }
 
-    public ForoRespuestaSalidaDTO crearRespuesta(Long hiloId, ForoRespuestaDTO dto, String email) {
+    public ForoRespuestaSalidaDTO crearRespuesta(Long hiloId, ForoRespuestaDTO dto, String username) {
         ForoHilo hilo = comprobarHilo(hiloId);
         ForoRespuesta respuesta = new ForoRespuesta();
         respuesta.setHilo(hilo);
         respuesta.setContenido(dto.contenido());
-        respuesta.setUsuario(obtenerUsuario(email));
+        respuesta.setUsuario(obtenerUsuario(username));
         return convertirRespuesta(respuestas.save(respuesta));
     }
 
-    public ForoHiloRespuestaDTO actualizarHilo(Long id, ForoHiloDTO dto, String email) {
+    public ForoHiloRespuestaDTO actualizarHilo(Long id, ForoHiloDTO dto, String username) {
         ForoHilo hilo = comprobarHilo(id);
-        comprobarPermiso(hilo.getUsuario(), email, "hilo");
+        comprobarPermiso(hilo.getUsuario(), username, "hilo");
         hilo.setTituloHilo(dto.getTituloHilo());
         hilo.setContenidoInicial(dto.getContenidoInicial());
         return convertirHilo(hilos.save(hilo));
     }
 
-    public void borrarHilo(Long id, String email) {
+    public void borrarHilo(Long id, String username) {
         ForoHilo hilo = comprobarHilo(id);
-        comprobarPermiso(hilo.getUsuario(), email, "hilo");
+        comprobarPermiso(hilo.getUsuario(), username, "hilo");
         hilos.delete(hilo);
     }
 
-    public ForoRespuestaSalidaDTO actualizarRespuesta(Long id, ForoRespuestaDTO dto, String email) {
+    public ForoRespuestaSalidaDTO actualizarRespuesta(Long id, ForoRespuestaDTO dto, String username) {
         ForoRespuesta respuesta = obtenerRespuesta(id);
-        comprobarPermiso(respuesta.getUsuario(), email, "respuesta");
+        comprobarPermiso(respuesta.getUsuario(), username, "respuesta");
         respuesta.setContenido(dto.contenido());
         return convertirRespuesta(respuestas.save(respuesta));
     }
 
-    public void borrarRespuesta(Long id, String email) {
+    public void borrarRespuesta(Long id, String username) {
         ForoRespuesta respuesta = obtenerRespuesta(id);
-        comprobarPermiso(respuesta.getUsuario(), email, "respuesta");
+        comprobarPermiso(respuesta.getUsuario(), username, "respuesta");
         respuestas.delete(respuesta);
     }
 
@@ -100,22 +97,27 @@ public class ForoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Respuesta no encontrada: " + id));
     }
 
-    private Usuario obtenerUsuario(String email) {
-        return usuarios.findByEmail(email)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + email));
+    private Usuario obtenerUsuario(String username) {
+        return usuarios.findByUsername(username)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + username));
     }
 
-    private void comprobarPermiso(Usuario propietario, String email, String recurso) {
-        Usuario solicitante = obtenerUsuario(email);
+    private void comprobarPermiso(Usuario propietario, String username, String recurso) {
+        Usuario solicitante = obtenerUsuario(username);
         if (!propietario.getId().equals(solicitante.getId()) && solicitante.getRol() != Usuario.Rol.ROLE_ADMIN) {
             throw new AccesoDenegadoException("No tienes permisos sobre esta " + recurso);
         }
     }
 
     private ForoHiloRespuestaDTO convertirHilo(ForoHilo hilo) {
-        return new ForoHiloRespuestaDTO(hilo.getId(), hilo.getTituloHilo(), hilo.getContenidoInicial(),
-                hilo.getFechaCreacion(), hilo.getLibro().getId(),
-                new UsuarioResumenDTO(hilo.getUsuario().getId(), hilo.getUsuario().getPublicUsername(), hilo.getUsuario().getDescripcion()));
+        return new ForoHiloRespuestaDTO(
+                hilo.getId(),
+                hilo.getTituloHilo(),
+                hilo.getContenidoInicial(),
+                hilo.getFechaCreacion(),
+                hilo.getLibro().getId(),
+                new UsuarioResumenDTO(hilo.getUsuario().getId(), hilo.getUsuario().getPublicUsername(), hilo.getUsuario().getDescripcion())
+        );
     }
 
     public ForoHiloRespuestaDTO convertirPublico(ForoHilo hilo) {
@@ -123,8 +125,12 @@ public class ForoService {
     }
 
     private ForoRespuestaSalidaDTO convertirRespuesta(ForoRespuesta respuesta) {
-        return new ForoRespuestaSalidaDTO(respuesta.getId(), respuesta.getContenido(), respuesta.getFechaCreacion(),
+        return new ForoRespuestaSalidaDTO(
+                respuesta.getId(),
+                respuesta.getContenido(),
+                respuesta.getFechaCreacion(),
                 respuesta.getHilo().getId(),
-                new UsuarioResumenDTO(respuesta.getUsuario().getId(), respuesta.getUsuario().getPublicUsername(), respuesta.getUsuario().getDescripcion()));
+                new UsuarioResumenDTO(respuesta.getUsuario().getId(), respuesta.getUsuario().getPublicUsername(), respuesta.getUsuario().getDescripcion())
+        );
     }
 }
