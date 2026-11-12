@@ -1,5 +1,6 @@
-DROP DATABASE IF EXISTS librarium_db;
-CREATE DATABASE librarium_db
+-- Esquema de inicialización: MySQL ejecuta este archivo solo en una instalación nueva.
+-- No eliminar la base de datos aquí: eso destruiría los datos de producción al reutilizarlo.
+CREATE DATABASE IF NOT EXISTS librarium_db
     DEFAULT CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 

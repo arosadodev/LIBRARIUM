@@ -63,15 +63,19 @@ La API expone los siguientes recursos principales bajo `/api`:
 1. Clonar el repositorio.
 2. Crear la base de datos `librarium_db` con `database/scriptLibrarium.sql`.
 3. Para pruebas locales, cargar datos iniciales con `database/insertions.sql`.
-4. Configurar la clave persistente JWT local antes de iniciar:
+4. Configurar la clave JWT y las credenciales de MySQL mediante variables de entorno antes de iniciar:
 
    ```bash
-   export LIBRARIUM_JWT_SECRET=$(openssl rand -base64 32)
+   export LIBRARIUM_JWT_SECRET="$(openssl rand -base64 48)"
+   export SPRING_DATASOURCE_USERNAME="tu_usuario_mysql"
+   export SPRING_DATASOURCE_PASSWORD="tu_contrasena_mysql"
    ```
 
 5. Usar el puerto `8080`, salvo que se modifique `server.port`.
 
 No se deben versionar credenciales reales. La configuración local debe migrarse a variables de entorno o perfiles de Spring antes de publicar el proyecto.
+
+Para Docker de producción, copia `.env.example` a `.env` y reemplaza los marcadores por valores aleatorios nuevos. Puedes generar contraseñas MySQL con `openssl rand -hex 32` y la clave JWT con `openssl rand -base64 48`. El `.env` está excluido de Git y de las imágenes. En un volumen MySQL ya inicializado, cambiar `MYSQL_PASSWORD` en `.env` no cambia la contraseña guardada dentro de MySQL; hay que actualizar el usuario también en el servidor y reiniciar la API con el mismo valor.
 
 ### Ejecución local con Docker
 
