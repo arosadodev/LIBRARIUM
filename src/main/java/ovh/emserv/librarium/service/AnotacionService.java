@@ -14,6 +14,10 @@ import ovh.emserv.librarium.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
+/**
+ * @author mit
+ * @date 9/11/26 20:16
+ */
 @Service
 public class AnotacionService {
     private final AnotacionRepository repository;
