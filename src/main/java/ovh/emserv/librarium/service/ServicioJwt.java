@@ -19,8 +19,8 @@ import java.util.List;
 @Service
 public class ServicioJwt {
 
+    private static final long TIEMPO_EXPIRACION_MS = 86400000;
     private final SecretKey claveSecreta;
-    private final long tiempoExpiracionMs = 86400000; // 24 horas
 
     public ServicioJwt(@Value("${librarium.jwt.secret}") String secretoBase64) {
         try {
@@ -41,7 +41,7 @@ public class ServicioJwt {
         return Jwts.builder().setSubject(credencialesValidadas.getName()) // El nick del usuario
                 .setIssuer("librarium-api") // Emisor del token
                 .setIssuedAt(new Date()) // Fecha de creación
-                .setExpiration(new Date(System.currentTimeMillis() + tiempoExpiracionMs)) // Fecha límite
+                .setExpiration(new Date(System.currentTimeMillis() + TIEMPO_EXPIRACION_MS)) // Fecha límite
                 .claim("roles", roles) // Guardamos los roles como información extra
                 .signWith(claveSecreta) // Firmamos
                 .compact();
@@ -49,6 +49,10 @@ public class ServicioJwt {
 
     public SecretKey getClaveSecreta() {
         return claveSecreta;
+    }
+
+    public long getTiempoExpiracionSegundos() {
+        return TIEMPO_EXPIRACION_MS / 1000;
     }
 
 }

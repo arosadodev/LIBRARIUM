@@ -1,5 +1,5 @@
-const productionHosts = ['librarium.emserv.ovh', 'www.librarium.emserv.ovh']
-
 export default {
-  apiUrl: productionHosts.includes(window.location.hostname) ? '' : 'http://localhost:8080'
+  apiUrl: import.meta.env.VITE_API_URL || (import.meta.env.DEV
+    ? 'http://localhost:8080'
+    : 'https://librarium-api.emserv.ovh')
 }

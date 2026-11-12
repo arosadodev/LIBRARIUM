@@ -19,9 +19,13 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
 import java.time.Instant;
 
 /**
@@ -35,22 +39,28 @@ import java.time.Instant;
 public class ConfiguracionSeguridad {
     private final ServicioJwt servicioJwt;
     private final UsuarioDetallesService usuarioDetallesService;
+    private final boolean cookieSecure;
 
-    public ConfiguracionSeguridad(ServicioJwt servicioJwt, UsuarioDetallesService usuarioDetallesService) {
+    public ConfiguracionSeguridad(ServicioJwt servicioJwt, UsuarioDetallesService usuarioDetallesService,
+                                  @org.springframework.beans.factory.annotation.Value("${librarium.auth.cookie-secure:false}") boolean cookieSecure) {
         this.servicioJwt = servicioJwt;
         this.usuarioDetallesService = usuarioDetallesService;
+        this.cookieSecure = cookieSecure;
     }
 
     @Bean
     public SecurityFilterChain filtroDeSeguridad(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Desactivar CSRF para APIs REST
+                .csrf(csrf -> csrf
+                        .spa()
+                        .csrfTokenRepository(repositorioCsrf()))
                 .cors(Customizer.withDefaults())
 
                 // RUTAS PERMITIDAS Y RESTRINGIDAS
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll() // Login y registro públicos
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/csrf", "/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/session").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/libros/**").permitAll()// Catálogo de libros público
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/**").permitAll()
@@ -73,6 +83,7 @@ public class ConfiguracionSeguridad {
 
                 // VALIDACIÓN AUTOMÁTICA DE TOKENS JWT
                 .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(resolvedorToken())
                         .jwt(jwt -> jwt
                                 .decoder(decodificadorJwt())
                                 .jwtAuthenticationConverter(conversorDeRolesJwt())
@@ -87,6 +98,32 @@ public class ConfiguracionSeguridad {
                                         "No tienes permisos para acceder a este recurso", request.getRequestURI())));
 
         return http.build();
+    }
+
+    private CookieCsrfTokenRepository repositorioCsrf() {
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        repository.setCookieCustomizer(cookie -> cookie
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path("/"));
+        return repository;
+    }
+
+    private BearerTokenResolver resolvedorToken() {
+        DefaultBearerTokenResolver headerResolver = new DefaultBearerTokenResolver();
+        return request -> {
+            String headerToken = headerResolver.resolve(request);
+            if (headerToken != null) return headerToken;
+            Cookie[] cookies = request.getCookies();
+            if (cookies == null) return null;
+            for (Cookie cookie : cookies) {
+                if (("__Host-LIBRARIUM_AUTH".equals(cookie.getName()) || "LIBRARIUM_AUTH".equals(cookie.getName()))
+                        && !cookie.getValue().isBlank()) {
+                    return cookie.getValue();
+                }
+            }
+            return null;
+        };
     }
 
     @Bean

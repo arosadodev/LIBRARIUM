@@ -11,8 +11,10 @@ Este repositorio documenta el proyecto tal como está implementado en la actuali
 - Java 25 y Spring Boot 4.1.2 son los entornos objetivos reales.
 - El proyecto compila con `./mvnw compile` y pasa `./mvnw test`.
 - La base de datos objetivo es MySQL sobre `localhost:3308`, con esquema relacional para libros, usuarios, reseñas, anotaciones y foros.
-- La autenticación de la API utiliza JWT stateless, BCrypt y autorización basada en roles (`ROLE_USER` y `ROLE_ADMIN`).
+- La autenticación usa JWT firmado en una cookie `HttpOnly`, BCrypt, protección CSRF y autorización basada en roles (`ROLE_USER` y `ROLE_ADMIN`). JavaScript no recibe ni almacena el JWT.
 - La clave JWT se carga desde la propiedad obligatoria `librarium.jwt.secret` (o variable de entorno `LIBRARIUM_JWT_SECRET`). Nunca se almacena en el repositorio.
+- En producción, la clave de firma debe persistir en el archivo de secretos protegido del servidor (o en el `.env` privado de Compose) y mantenerse igual entre reinicios y despliegues. El JWT de sesión caduca a las 24 horas; no conviene usar tokens de acceso sin caducidad.
+- Frontend y API se despliegan por separado: frontend en `librarium.emserv.ovh`, API en `librarium-api.emserv.ovh`. CORS solo permite el origen del frontend.
 - Se integra con la API pública de Open Library para buscar libros e importar datos mínimos al catálogo local (`open_library_key`, título, ISBN y año).
 - La documentación interactiva OpenAPI/Swagger UI se expone en `/swagger-ui/index.html`.
 
@@ -75,7 +77,7 @@ La API expone los siguientes recursos principales bajo `/api`:
 
 No se deben versionar credenciales reales. La configuración local debe migrarse a variables de entorno o perfiles de Spring antes de publicar el proyecto.
 
-Para Docker de producción, copia `.env.example` a `.env` y reemplaza los marcadores por valores aleatorios nuevos. Puedes generar contraseñas MySQL con `openssl rand -hex 32` y la clave JWT con `openssl rand -base64 48`. El `.env` está excluido de Git y de las imágenes. En un volumen MySQL ya inicializado, cambiar `MYSQL_PASSWORD` en `.env` no cambia la contraseña guardada dentro de MySQL; hay que actualizar el usuario también en el servidor y reiniciar la API con el mismo valor.
+Para Docker de producción, copia `.env.example` a `.env`, cambia todos los marcadores por valores aleatorios y conserva ese `.env` solo en el servidor con permisos restringidos (`chmod 600 .env`). Puedes generar contraseñas MySQL con `openssl rand -hex 32` y la clave JWT con `openssl rand -base64 48`. El `.env` está excluido de Git y de las imágenes; no lo regeneres en cada despliegue. En un volumen MySQL ya inicializado, cambiar `MYSQL_PASSWORD` en `.env` no cambia la contraseña guardada dentro de MySQL; hay que actualizar el usuario también en el servidor y reiniciar la API con el mismo valor.
 
 ### Ejecución local con Docker
 
@@ -84,6 +86,14 @@ Construir la imagen del backend desde la raíz del proyecto:
 ```bash
 docker build -t librarium-api .
 ```
+
+Para el despliegue separado con Compose, configura `.env` en el servidor y arranca los tres servicios:
+
+```bash
+docker compose --env-file .env -f docker-compose.prod.yml up -d --build
+```
+
+El proxy HTTPS del servidor debe enrutar `librarium.emserv.ovh` a `127.0.0.1:8082` y `librarium-api.emserv.ovh` a `127.0.0.1:8081`. Mantén la base de datos sin puertos publicados. Si cambias `VITE_API_URL`, ajusta también `connect-src` en `frontend/nginx.conf` y el origen permitido en CORS.
 
 `mysql` debe ser el nombre o alias de red del contenedor MySQL. No se debe copiar `.env` dentro de la imagen ni publicar secretos en el repositorio.
 

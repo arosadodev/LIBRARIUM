@@ -9,23 +9,34 @@ let books = []
 let currentBook = null
 let currentProfile = null
 let currentPage = 'inicio'
+let csrfToken = null
+let csrfHeader = 'X-XSRF-TOKEN'
+let sessionUser = null
+let sessionRole = null
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
 }[character]))
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem('librarium_token')
+  const method = (options.method || 'GET').toUpperCase()
+  const unsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(method)
+  if (unsafeMethod && !csrfToken) await refreshCsrfToken()
   const headers = {
     ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(unsafeMethod && csrfToken ? { [csrfHeader]: csrfToken } : {}),
     ...options.headers
   }
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers })
+  const response = await fetch(`${API_URL}${path}`, { ...options, method, headers, credentials: 'include' })
   const responseText = response.status === 204 ? '' : await response.text()
   let responseBody = null
   if (responseText.trim()) {
     try { responseBody = JSON.parse(responseText) } catch { responseBody = responseText }
+  }
+  if (response.status === 401 && path !== '/api/auth/login') {
+    clearStoredUser()
+    updateAuthButton()
+    updateNav()
   }
   if (!response.ok) {
     const bodyMessage = responseBody && typeof responseBody === 'object'
@@ -41,46 +52,26 @@ async function request(path, options = {}) {
   return responseBody
 }
 
-function isLoggedIn() { return Boolean(localStorage.getItem('librarium_token')) }
-function tokenPayload(token) {
-  const parts = token.split('.')
-  if (parts.length !== 3) return null
-  const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
-  return JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')))
+async function refreshCsrfToken() {
+  const result = await request('/api/auth/csrf')
+  csrfToken = result?.token || null
+  csrfHeader = result?.headerName || 'X-XSRF-TOKEN'
 }
-function isAdmin() {
-  if (!isLoggedIn()) return false
-  const token = localStorage.getItem('librarium_token')
-  if (token) {
-    try {
-      const payload = tokenPayload(token)
-      const roles = payload?.roles || []
-      if (Array.isArray(roles) && (roles.includes('ROLE_ADMIN') || roles.includes('ADMIN'))) {
-        return true
-      }
-    } catch (e) {
-      // Ignorar errores de decodificación
-    }
-  }
-  const role = localStorage.getItem('librarium_role')
-  return role === 'ROLE_ADMIN' || role === 'ADMIN'
-}
-function clearLegacySession() {
-  const token = localStorage.getItem('librarium_token')
-  if (!token) return false
-  try {
-    const payload = tokenPayload(token)
-    const username = localStorage.getItem('librarium_username')
-    if (payload?.sub && username && !payload.sub.includes('@') && payload.sub.toLowerCase() === username.toLowerCase()) {
-      return false
-    }
-  } catch (e) {
-    // Las sesiones que no se pueden leer deben volver a autenticarse.
-  }
+
+function clearStoredUser() {
+  sessionUser = null
+  sessionRole = null
   localStorage.removeItem('librarium_token')
   localStorage.removeItem('librarium_username')
   localStorage.removeItem('librarium_role')
-  return true
+}
+
+function isLoggedIn() { return Boolean(sessionUser) }
+function isAdmin() { return isLoggedIn() && (sessionRole === 'ROLE_ADMIN' || sessionRole === 'ADMIN') }
+function clearLegacySession() {
+  const hadLegacyToken = Boolean(localStorage.getItem('librarium_token'))
+  if (hadLegacyToken) clearStoredUser()
+  return hadLegacyToken
 }
 function requireLogin() {
   if (!isLoggedIn()) {
@@ -104,7 +95,17 @@ function authors(book) {
   return book?.author || 'Autor desconocido'
 }
 function year(book) { return book?.anoPublicacion || book?.firstPublishYear || '—' }
-function cover(book) { return book?.portadaUrl || book?.coverUrl || fallbackCover }
+function cover(book) {
+  const value = book?.portadaUrl || book?.coverUrl
+  if (!value) return fallbackCover
+  try {
+    const image = new URL(value, window.location.origin)
+    if (image.origin === window.location.origin || (image.protocol === 'https:' && image.hostname === 'covers.openlibrary.org')) {
+      return image.href
+    }
+  } catch {}
+  return fallbackCover
+}
 function synopsis(book) {
   const text = book?.sinopsis || book?.synopsis || book?.description || ''
   return text.trim() || 'Sin sinopsis disponible.'
@@ -195,7 +196,7 @@ async function searchExternalBooks(event) {
   try {
     const results = await request(`/api/libros/buscar-externo?q=${encodeURIComponent(query)}`)
     const externalBooks = results.slice(0, 6)
-    target.innerHTML = externalBooks.length ? `<div class="external-grid">${externalBooks.map((book, index) => `<article class="external-card"><img src="${escapeHtml(book.coverUrl || book.portadaUrl || fallbackCover)}" alt="Portada de ${escapeHtml(book.title || book.titulo || 'Sin título')}"><div class="external-info"><h3>${escapeHtml(book.title || book.titulo || 'Sin título')}</h3><p>${escapeHtml((book.authors || book.autores || []).join(', ') || 'Autor desconocido')}</p><small class="external-year">${escapeHtml(book.firstPublishYear || book.anoPublicacion || 'Año desconocido')}</small><button class="outline-button" data-import-index="${index}">Añadir a la biblioteca</button></div></article>`).join('')}</div>` : '<p class="muted">No hemos encontrado resultados externos.</p>'
+    target.innerHTML = externalBooks.length ? `<div class="external-grid">${externalBooks.map((book, index) => `<article class="external-card"><img src="${escapeHtml(cover(book))}" alt="Portada de ${escapeHtml(book.title || book.titulo || 'Sin título')}"><div class="external-info"><h3>${escapeHtml(book.title || book.titulo || 'Sin título')}</h3><p>${escapeHtml((book.authors || book.autores || []).join(', ') || 'Autor desconocido')}</p><small class="external-year">${escapeHtml(book.firstPublishYear || book.anoPublicacion || 'Año desconocido')}</small><button class="outline-button" data-import-index="${index}">Añadir a la biblioteca</button></div></article>`).join('')}</div>` : '<p class="muted">No hemos encontrado resultados externos.</p>'
     document.querySelectorAll('[data-import-index]').forEach((button) => button.addEventListener('click', () => importExternalBook(externalBooks[Number(button.dataset.importIndex)])))
   } catch (error) { target.innerHTML = `<p class="muted">${escapeHtml(error.message)}</p>` }
 }
@@ -247,7 +248,7 @@ async function renderProfile() {
   bindNavigation()
   try {
     const profile = await request(`/api/usuarios/${encodeURIComponent(currentProfile)}`)
-    const myUsername = localStorage.getItem('librarium_username')
+    const myUsername = sessionUser
     const isMine = isLoggedIn() && (profile.usuario?.username?.toLowerCase() === myUsername?.toLowerCase() || currentProfile?.toLowerCase() === myUsername?.toLowerCase())
     await renderProfileView(profile, isMine)
   } catch (error) { document.querySelector('#profile-content').innerHTML = `<div class="empty"><h3>No se pudo cargar el perfil</h3><p>${escapeHtml(error.message)}</p></div>` }
@@ -264,8 +265,7 @@ async function renderMyProfile() {
     await renderProfileView(profile, true)
   } catch (error) {
     if (error.status === 401 || error.status === 404) {
-      localStorage.removeItem('librarium_token')
-      localStorage.removeItem('librarium_username')
+      clearStoredUser()
       updateAuthButton()
       app.innerHTML = '<section class="section page"><div class="empty"><h3>Tu sesión necesita actualizarse</h3><p>La cuenta asociada a esta sesión ya no está disponible. Inicia sesión de nuevo con tu cuenta actual.</p><button class="primary-button" id="profile-login">Iniciar sesión →</button></div></section>'
       document.querySelector('#profile-login').addEventListener('click', () => showAuth('login'))
@@ -395,7 +395,7 @@ async function renderProfileView(profile, isMine) {
             body: JSON.stringify(body)
           })
           if (updated.usuario?.username) {
-            localStorage.setItem('librarium_username', updated.usuario.username)
+            sessionUser = updated.usuario.username
             currentProfile = updated.usuario.username
           }
           showToast('Perfil actualizado con éxito.')
@@ -590,7 +590,7 @@ function showAuth(mode = 'login') {
   const identityFields = mode === 'register'
     ? '<input name="username" maxlength="50" autocomplete="username" required placeholder="Nick único"><input name="email" type="email" autocomplete="email" required placeholder="Correo de contacto">'
     : '<input name="username" maxlength="50" autocomplete="username" required placeholder="Tu nick">'
-  modal.innerHTML = `<div class="modal-backdrop"><div class="auth-modal"><button class="modal-close" id="close-modal" aria-label="Cerrar">×</button><img class="brand-mark" src="${iconUrl}" alt=""><p class="eyebrow">Librarium Marginalia</p><h2>${mode === 'login' ? 'Vuelve a tus lecturas' : 'Crea tu cuenta'}</h2><div class="auth-tabs"><button class="${mode === 'login' ? 'active' : ''}" data-auth="login">Iniciar sesión</button><button class="${mode === 'register' ? 'active' : ''}" data-auth="register">Registrarme</button></div><form id="auth-form">${identityFields}<input name="password" type="password" minlength="4" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required placeholder="Tu contraseña"><button class="primary-button">${mode === 'login' ? 'Entrar en mi biblioteca →' : 'Crear mi cuenta →'}</button></form></div></div>`
+  modal.innerHTML = `<div class="modal-backdrop"><div class="auth-modal"><button class="modal-close" id="close-modal" aria-label="Cerrar">×</button><img class="brand-mark" src="${iconUrl}" alt=""><p class="eyebrow">Librarium Marginalia</p><h2>${mode === 'login' ? 'Vuelve a tus lecturas' : 'Crea tu cuenta'}</h2><div class="auth-tabs"><button class="${mode === 'login' ? 'active' : ''}" data-auth="login">Iniciar sesión</button><button class="${mode === 'register' ? 'active' : ''}" data-auth="register">Registrarme</button></div><form id="auth-form">${identityFields}<input name="password" type="password" minlength="${mode === 'login' ? 1 : 15}" autocomplete="${mode === 'login' ? 'current-password' : 'new-password'}" required placeholder="${mode === 'login' ? 'Tu contraseña' : 'Mínimo 15 caracteres'}"><button class="primary-button">${mode === 'login' ? 'Entrar en mi biblioteca →' : 'Crear mi cuenta →'}</button></form></div></div>`
   document.querySelector('#close-modal').addEventListener('click', () => { modal.hidden = true })
   document.querySelectorAll('[data-auth]').forEach((button) => button.addEventListener('click', () => showAuth(button.dataset.auth)))
   document.querySelector('#auth-form').addEventListener('submit', async (event) => {
@@ -603,23 +603,11 @@ function showAuth(mode = 'login') {
         showAuth('login')
       } else {
         const result = await request('/api/auth/login', { method: 'POST', body: JSON.stringify(data) })
-        if (!result || typeof result !== 'object' || !result.token || !result.username) {
+        if (!result || typeof result !== 'object' || !result.username || !result.rol) {
           throw new Error('La API no devolvió una respuesta de inicio de sesión válida. Comprueba que el backend y el frontend estén desplegados en versiones compatibles.')
         }
-        localStorage.setItem('librarium_token', result.token)
-        localStorage.setItem('librarium_username', result.username)
-        if (result.rol) {
-          localStorage.setItem('librarium_role', result.rol)
-        } else {
-          try {
-            const payload = tokenPayload(result.token)
-            if (payload.roles && (payload.roles.includes('ROLE_ADMIN') || payload.roles.includes('ADMIN'))) {
-              localStorage.setItem('librarium_role', 'ROLE_ADMIN')
-            } else {
-              localStorage.setItem('librarium_role', 'ROLE_USER')
-            }
-          } catch (e) {}
-        }
+        sessionUser = result.username
+        sessionRole = result.rol
         modal.hidden = true
         updateAuthButton()
         updateNav()
@@ -643,21 +631,21 @@ function updateNav() {
 
 function updateAuthButton() {
   const button = document.querySelector('#login-button')
-  const username = localStorage.getItem('librarium_username')
+  const username = sessionUser
   if (isLoggedIn()) {
     button.innerHTML = isAdmin()
       ? `♛ <span>${escapeHtml(username || 'Admin')} (Salir)</span>`
       : `♙ <span>${escapeHtml(username || 'Salir')}</span>`
     button.onclick = () => {
-      localStorage.removeItem('librarium_token')
-      localStorage.removeItem('librarium_username')
-      localStorage.removeItem('librarium_role')
-      updateAuthButton()
-      updateNav()
-      showToast('Sesión cerrada.')
-      if (currentPage === 'admin' || currentPage === 'mi-perfil') {
-        showPage('inicio')
-      }
+      request('/api/auth/logout', { method: 'POST' })
+        .then(() => {
+          clearStoredUser()
+          updateAuthButton()
+          updateNav()
+          showToast('Sesión cerrada.')
+          if (currentPage === 'admin' || currentPage === 'mi-perfil') showPage('inicio')
+        })
+        .catch(error => showToast(error.message))
     }
   } else {
     button.innerHTML = '♙ <span>Entrar</span>'
@@ -974,7 +962,7 @@ async function renderAdminTabContent() {
           const topResults = results.slice(0, 4)
           target.innerHTML = topResults.length ? `<div class="external-grid">${topResults.map((b, idx) => `
             <article class="external-card">
-              <img src="${escapeHtml(b.coverUrl || b.portadaUrl || fallbackCover)}" alt="">
+              <img src="${escapeHtml(cover(b))}" alt="">
               <div class="external-info">
                 <h3>${escapeHtml(b.title || b.titulo || 'Sin título')}</h3>
                 <p>${escapeHtml((b.authors || b.autores || []).join(', ') || 'Autor desconocido')}</p>
@@ -1020,7 +1008,7 @@ async function renderAdminTabContent() {
         </div>
         <div style="margin-top:20px;padding:18px;border:1px solid var(--line);background:#1a130f;border-radius:4px;">
           <p class="eyebrow">Sesión de Administrador</p>
-          <p style="margin:6px 0;color:var(--soft);">Usuario autenticado: <strong>@${escapeHtml(localStorage.getItem('librarium_username') || 'admin')}</strong></p>
+          <p style="margin:6px 0;color:var(--soft);">Usuario autenticado: <strong>@${escapeHtml(sessionUser || 'admin')}</strong></p>
           <p style="margin:6px 0;color:var(--soft);">Origen de la API: <code>${escapeHtml(API_URL || 'Mismo origen (Producción)')}</code></p>
           <p style="margin:6px 0;color:var(--soft);">Estrategia de Seguridad: <code>JWT Stateless Bearer Authentication con BCrypt</code></p>
         </div>
@@ -1038,7 +1026,20 @@ document.querySelector('#menu-button').addEventListener('click', () => {
   button.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú')
 })
 window.addEventListener('hashchange', () => showPage(location.hash.slice(1) || 'inicio'))
-const legacySessionNeedsLogin = clearLegacySession()
-updateAuthButton()
-showPage(location.hash.slice(1) || 'inicio')
-if (legacySessionNeedsLogin) showToast('La sesión anterior usaba el correo como identificador. Inicia sesión de nuevo con tu nick.')
+
+async function initializeApp() {
+  const legacySessionNeedsLogin = clearLegacySession()
+  try {
+    await refreshCsrfToken()
+    const session = await request('/api/auth/session')
+    sessionUser = session.username
+    sessionRole = session.rol
+  } catch {
+    clearStoredUser()
+  }
+  updateAuthButton()
+  showPage(location.hash.slice(1) || 'inicio')
+  if (legacySessionNeedsLogin) showToast('Inicia sesión de nuevo para continuar con la protección de sesión actualizada.')
+}
+
+initializeApp()

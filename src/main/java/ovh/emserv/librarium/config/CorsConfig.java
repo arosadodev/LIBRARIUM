@@ -13,17 +13,19 @@ import java.util.Arrays;
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
-    @Value("${librarium.cors.allowed-origins:http://localhost:[*],http://127.0.0.1:[*],https://librarium.emserv.ovh}")
+    @Value("${librarium.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173,https://librarium.emserv.ovh}")
     private String allowedOrigins;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOriginPatterns(Arrays.stream(allowedOrigins.split(","))
+                .allowedOrigins(Arrays.stream(allowedOrigins.split(","))
                         .map(String::trim)
                         .filter(origin -> !origin.isBlank())
                         .toArray(String[]::new))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("Content-Type", "X-XSRF-TOKEN")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }
