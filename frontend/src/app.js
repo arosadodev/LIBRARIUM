@@ -13,6 +13,7 @@ let csrfToken = null
 let csrfHeader = 'X-XSRF-TOKEN'
 let sessionUser = null
 let sessionRole = null
+let editingAnnotationId = null
 
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (character) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
@@ -541,7 +542,8 @@ async function renderThread(id, threadTitle) {
 }
 
 async function renderAnnotations() {
-  app.innerHTML = `<section class="section page"><div class="page-intro"><p class="eyebrow">✎ Marginalia</p><h1>Citas y anotaciones</h1><p>Guarda esas frases que quieres volver a encontrar, junto a tus análisis y referencias.</p></div><div class="annotation-layout"><div id="annotations" class="annotation-list"><p class="muted">Cargando anotaciones...</p></div><form id="annotation-form" class="panel-form"><h2>Hacer una cita</h2><select name="tipo"><option value="CITA">Cita</option><option value="ANALISIS">Análisis</option><option value="REFERENCIA">Referencia</option></select><select name="libroId" id="annotation-book" required><option value="">Selecciona un libro</option></select><div class="form-row"><input name="capituloNumero" type="number" min="0" placeholder="Capítulo"><input name="pagina" type="number" min="0" placeholder="Página"></div><textarea name="contenido" maxlength="10000" required placeholder="Escribe aquí la cita o tu nota..."></textarea><button class="primary-button">Guardar anotación →</button></form></div></section>`
+  editingAnnotationId = null
+  app.innerHTML = `<section class="section page"><div class="page-intro"><p class="eyebrow">✎ Marginalia</p><h1>Citas y anotaciones</h1><p>Guarda esas frases que quieres volver a encontrar, junto a tus análisis y referencias.</p></div><div class="annotation-layout"><div id="annotations" class="annotation-list"><p class="muted">Cargando anotaciones...</p></div><form id="annotation-form" class="panel-form"><h2 id="annotation-form-title">Hacer una cita</h2><select name="tipo"><option value="CITA">Cita</option><option value="ANALISIS">Análisis</option><option value="REFERENCIA">Referencia</option></select><select name="libroId" id="annotation-book" required><option value="">Selecciona un libro</option></select><div class="form-row"><input name="capituloNumero" type="number" min="0" placeholder="Capítulo"><input name="pagina" type="number" min="0" placeholder="Página"></div><textarea name="contenido" maxlength="10000" required placeholder="Escribe aquí la cita o tu nota..."></textarea><div class="form-row"><button class="primary-button" id="annotation-submit">Guardar anotación →</button><button class="outline-button" id="annotation-cancel" type="button" hidden>Cancelar edición</button></div></form></div></section>`
   if (!isLoggedIn()) {
     document.querySelector('#annotations').innerHTML = '<div class="empty"><h3>Inicia sesión para ver tus anotaciones</h3><p>Guarda citas y notas de tus libros favoritos.</p><button class="primary-button" id="annotations-login">Iniciar sesión →</button></div>'
     document.querySelector('#annotations-login').addEventListener('click', () => showAuth('login'))
@@ -550,19 +552,23 @@ async function renderAnnotations() {
   const items = await loadBooks()
   items.forEach((book) => document.querySelector('#annotation-book').insertAdjacentHTML('beforeend', `<option value="${escapeHtml(book.id)}">${escapeHtml(title(book))}</option>`))
   document.querySelector('#annotation-form').addEventListener('submit', submitAnnotation)
+  document.querySelector('#annotation-cancel').addEventListener('click', resetAnnotationForm)
   if (!isLoggedIn()) return
   try {
-    const annotations = await request('/api/anotaciones')
+    const profile = await request('/api/usuarios/me')
+    const annotations = profile.anotaciones || []
+    const bookMap = new Map(items.map((book) => [String(book.id), title(book)]))
     document.querySelector('#annotations').innerHTML = annotations.length ? annotations.map((item) => {
-      const adminMod = isAdmin()
-        ? `<button class="admin-mod-btn" data-delete-annotation="${item.id}" title="Eliminar anotación como Administrador">🗑 Moderar</button>`
-        : ''
-      return `<article class="annotation-card"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="tag">${escapeHtml(item.tipo)}</span>${adminMod}</div><p>${escapeHtml(item.contenido)}</p><small>${item.pagina ? `Página ${escapeHtml(item.pagina)} · ` : ''}${escapeHtml(item.usuario?.username || 'lector')}</small></article>`
+      const location = [item.capituloNumero != null ? `Capítulo ${item.capituloNumero}` : '', item.pagina != null ? `Página ${item.pagina}` : ''].filter(Boolean).join(' · ')
+      return `<article class="annotation-card"><div style="display:flex;justify-content:space-between;align-items:center;"><span class="tag">${escapeHtml(item.tipo)}</span><div class="annotation-actions"><button class="outline-button" type="button" data-edit-annotation="${item.id}">Editar</button><button class="admin-mod-btn" type="button" data-delete-annotation="${item.id}">Eliminar</button></div></div><p>${escapeHtml(item.contenido)}</p><small>${escapeHtml(bookMap.get(String(item.libroId)) || 'Libro del catálogo')}${location ? ` · ${escapeHtml(location)}` : ''}</small></article>`
     }).join('') : '<p class="muted">Aún no has guardado ninguna anotación.</p>'
+    document.querySelectorAll('[data-edit-annotation]').forEach((btn) => btn.addEventListener('click', () => {
+      const annotation = annotations.find((item) => String(item.id) === btn.dataset.editAnnotation)
+      if (annotation) editAnnotation(annotation)
+    }))
     document.querySelectorAll('[data-delete-annotation]').forEach((btn) => btn.addEventListener('click', async (e) => {
       e.stopPropagation()
-      if (!isAdmin()) return
-      if (!confirm('¿Deseas eliminar esta anotación como Administrador?')) return
+      if (!confirm('¿Deseas eliminar esta anotación?')) return
       try {
         await request(`/api/anotaciones/${btn.dataset.deleteAnnotation}`, { method: 'DELETE' })
         showToast('Anotación eliminada.')
@@ -579,7 +585,36 @@ async function submitAnnotation(event) {
   if (!data.capituloNumero) delete data.capituloNumero
   if (!data.pagina) delete data.pagina
   data.libroId = Number(data.libroId)
-  try { await request('/api/anotaciones', { method: 'POST', body: JSON.stringify(data) }); showToast('Anotación guardada.'); renderAnnotations() } catch (error) { showToast(error.message) }
+  try {
+    await request(editingAnnotationId ? `/api/anotaciones/${editingAnnotationId}` : '/api/anotaciones', {
+      method: editingAnnotationId ? 'PUT' : 'POST', body: JSON.stringify(data)
+    })
+    showToast(editingAnnotationId ? 'Anotación actualizada.' : 'Anotación guardada.')
+    renderAnnotations()
+  } catch (error) { showToast(error.message) }
+}
+
+function editAnnotation(annotation) {
+  editingAnnotationId = annotation.id
+  const form = document.querySelector('#annotation-form')
+  form.elements.tipo.value = annotation.tipo
+  form.elements.libroId.value = annotation.libroId
+  form.elements.capituloNumero.value = annotation.capituloNumero ?? ''
+  form.elements.pagina.value = annotation.pagina ?? ''
+  form.elements.contenido.value = annotation.contenido
+  document.querySelector('#annotation-form-title').textContent = 'Editar anotación'
+  document.querySelector('#annotation-submit').textContent = 'Guardar cambios →'
+  document.querySelector('#annotation-cancel').hidden = false
+  form.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
+function resetAnnotationForm() {
+  editingAnnotationId = null
+  const form = document.querySelector('#annotation-form')
+  form.reset()
+  document.querySelector('#annotation-form-title').textContent = 'Hacer una cita'
+  document.querySelector('#annotation-submit').textContent = 'Guardar anotación →'
+  document.querySelector('#annotation-cancel').hidden = true
 }
 
 let currentAdminTab = 'moderacion'
