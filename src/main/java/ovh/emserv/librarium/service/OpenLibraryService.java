@@ -35,6 +35,7 @@ public class OpenLibraryService {
     public OpenLibraryService(ObjectMapper objectMapper, LibroRepository libroRepository,
                               AutorRepository autorRepository) {
         this.client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
         this.objectMapper = objectMapper;
@@ -56,10 +57,14 @@ public class OpenLibraryService {
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new ServicioExternoException("Open Library respondió con HTTP " + response.statusCode());
             }
-            return convertirResultados(response.body());
+            try {
+                return convertirResultados(response.body());
+            } catch (IOException | RuntimeException exception) {
+                throw new ServicioExternoException("Open Library devolvió una respuesta JSON no válida", exception);
+            }
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new ServicioExternoException("La consulta a Open Library fue interrumpida", exception);
@@ -157,6 +162,9 @@ public class OpenLibraryService {
 
     private List<OpenLibraryLibroDTO> convertirResultados(String json) throws IOException {
         JsonNode docs = objectMapper.readTree(json).path("docs");
+        if (!docs.isArray()) {
+            throw new IOException("La respuesta no contiene la lista docs esperada");
+        }
         List<OpenLibraryLibroDTO> resultados = new ArrayList<>();
 
         for (JsonNode doc : docs) {

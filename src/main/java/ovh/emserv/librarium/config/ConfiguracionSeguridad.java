@@ -22,6 +22,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
 import jakarta.servlet.http.HttpServletResponse;
@@ -93,9 +94,12 @@ public class ConfiguracionSeguridad {
                         .authenticationEntryPoint((request, response, exception) ->
                                 escribirError(response, HttpServletResponse.SC_UNAUTHORIZED,
                                         "Autenticación requerida", request.getRequestURI()))
-                        .accessDeniedHandler((request, response, exception) ->
-                                escribirError(response, HttpServletResponse.SC_FORBIDDEN,
-                                        "No tienes permisos para acceder a este recurso", request.getRequestURI())));
+                        .accessDeniedHandler((request, response, exception) -> {
+                            String mensaje = exception instanceof CsrfException
+                                    ? "El token de seguridad ha caducado o no es válido. Reintenta la operación."
+                                    : "No tienes permisos para acceder a este recurso";
+                            escribirError(response, HttpServletResponse.SC_FORBIDDEN, mensaje, request.getRequestURI());
+                        }));
 
         return http.build();
     }

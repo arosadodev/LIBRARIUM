@@ -5,11 +5,15 @@
 El frontend **no ofrece ninguna opción para crear administradores**. El registro público (`POST /api/auth/register`) asigna siempre `ROLE_USER`, y el DTO de registro no acepta un rol.
 
 1. Arranca MySQL y la API.
-2. Registra el usuario normalmente desde Librarium o con la API:
+2. Registra el usuario normalmente desde Librarium o con la API. Las escrituras requieren CSRF; una llamada POST directa sin token devuelve 403:
 
    ```http
-   POST https://api.librarium.emserv.ovh/api/auth/register
+   GET https://librarium-api.emserv.ovh/api/auth/csrf
+
+   POST https://librarium-api.emserv.ovh/api/auth/register
    Content-Type: application/json
+   Cookie: XSRF-TOKEN=<cookie recibida en el GET>
+   X-XSRF-TOKEN: <token del JSON recibido en el GET>
 
    {
      "username": "admin",

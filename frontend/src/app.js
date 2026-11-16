@@ -19,7 +19,7 @@ const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (character)
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
 }[character]))
 
-async function request(path, options = {}) {
+async function request(path, options = {}, csrfRetry = true) {
   const method = (options.method || 'GET').toUpperCase()
   const unsafeMethod = !['GET', 'HEAD', 'OPTIONS'].includes(method)
   if (unsafeMethod && !csrfToken) await refreshCsrfToken()
@@ -43,7 +43,14 @@ async function request(path, options = {}) {
     const bodyMessage = responseBody && typeof responseBody === 'object'
       ? responseBody.message || responseBody.error
       : typeof responseBody === 'string' && !/^\s*</.test(responseBody) ? responseBody : null
-    const fallbackMessage = /^\s*</.test(responseText)
+    if (response.status === 403 && unsafeMethod && csrfRetry && /token de seguridad/i.test(bodyMessage || '')) {
+      csrfToken = null
+      await refreshCsrfToken()
+      return request(path, options, false)
+    }
+    const fallbackMessage = response.status === 405
+      ? `El servidor rechazó ${method} ${path} (405). Comprueba que librarium-api.emserv.ovh apunta al contenedor Spring Boot y que el proxy permite este método HTTP.`
+      : /^\s*</.test(responseText)
       ? `La API respondió con el estado ${response.status}, pero devolvió una página HTML. Comprueba que el backend y el frontend estén desplegados en sus versiones compatibles.`
       : `La API respondió con el estado ${response.status} y no devolvió un error JSON válido.`
     const requestError = new Error(bodyMessage || fallbackMessage)
@@ -57,6 +64,7 @@ async function refreshCsrfToken() {
   const result = await request('/api/auth/csrf')
   csrfToken = result?.token || null
   csrfHeader = result?.headerName || 'X-XSRF-TOKEN'
+  if (!csrfToken) throw new Error('La API no entregó el token de seguridad. Recarga la página e inténtalo de nuevo.')
 }
 
 function clearStoredUser() {
@@ -112,7 +120,17 @@ function synopsis(book) {
   return text.trim() || 'Sin sinopsis disponible.'
 }
 function bookId(book) { return book?.id ?? book?.key }
-function getFavorites() { return JSON.parse(localStorage.getItem('librarium_favorites') || '[]') }
+function getFavorites() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('librarium_favorites') || '[]')
+    return Array.isArray(stored) ? stored : []
+  } catch {
+    // A damaged or outdated localStorage value should not prevent the app
+    // from rendering; the next save replaces it with valid JSON.
+    try { localStorage.removeItem('librarium_favorites') } catch {}
+    return []
+  }
+}
 function isFavorite(book) { return getFavorites().some((item) => String(bookId(item)) === String(bookId(book))) }
 function toggleFavorite(book) {
   const saved = getFavorites()
@@ -196,6 +214,7 @@ async function searchExternalBooks(event) {
   target.innerHTML = '<p class="muted">Buscando en Open Library...</p>'
   try {
     const results = await request(`/api/libros/buscar-externo?q=${encodeURIComponent(query)}`)
+    if (!Array.isArray(results)) throw new Error('La API de Open Library devolvió una respuesta inesperada. Comprueba que el backend esté actualizado.')
     const externalBooks = results.slice(0, 6)
     target.innerHTML = externalBooks.length ? `<div class="external-grid">${externalBooks.map((book, index) => `<article class="external-card"><img src="${escapeHtml(cover(book))}" alt="Portada de ${escapeHtml(book.title || book.titulo || 'Sin título')}"><div class="external-info"><h3>${escapeHtml(book.title || book.titulo || 'Sin título')}</h3><p>${escapeHtml((book.authors || book.autores || []).join(', ') || 'Autor desconocido')}</p><small class="external-year">${escapeHtml(book.firstPublishYear || book.anoPublicacion || 'Año desconocido')}</small><button class="outline-button" data-import-index="${index}">Añadir a la biblioteca</button></div></article>`).join('')}</div>` : '<p class="muted">No hemos encontrado resultados externos.</p>'
     document.querySelectorAll('[data-import-index]').forEach((button) => button.addEventListener('click', () => importExternalBook(externalBooks[Number(button.dataset.importIndex)])))
@@ -643,6 +662,8 @@ function showAuth(mode = 'login') {
         }
         sessionUser = result.username
         sessionRole = result.rol
+        // Spring Security invalidates the CSRF cookie after authentication.
+        csrfToken = null
         modal.hidden = true
         updateAuthButton()
         updateNav()
@@ -674,6 +695,8 @@ function updateAuthButton() {
     button.onclick = () => {
       request('/api/auth/logout', { method: 'POST' })
         .then(() => {
+          // Logout also clears the CSRF cookie; the next write fetches a fresh one.
+          csrfToken = null
           clearStoredUser()
           updateAuthButton()
           updateNav()
@@ -994,6 +1017,7 @@ async function renderAdminTabContent() {
         target.innerHTML = '<p class="muted">Consultando Open Library...</p>'
         try {
           const results = await request(`/api/libros/buscar-externo?q=${encodeURIComponent(query)}`)
+          if (!Array.isArray(results)) throw new Error('La API de Open Library devolvió una respuesta inesperada. Comprueba que el backend esté actualizado.')
           const topResults = results.slice(0, 4)
           target.innerHTML = topResults.length ? `<div class="external-grid">${topResults.map((b, idx) => `
             <article class="external-card">
@@ -1045,7 +1069,7 @@ async function renderAdminTabContent() {
           <p class="eyebrow">Sesión de Administrador</p>
           <p style="margin:6px 0;color:var(--soft);">Usuario autenticado: <strong>@${escapeHtml(sessionUser || 'admin')}</strong></p>
           <p style="margin:6px 0;color:var(--soft);">Origen de la API: <code>${escapeHtml(API_URL || 'Mismo origen (Producción)')}</code></p>
-          <p style="margin:6px 0;color:var(--soft);">Estrategia de Seguridad: <code>JWT Stateless Bearer Authentication con BCrypt</code></p>
+          <p style="margin:6px 0;color:var(--soft);">Estrategia de Seguridad: <code>JWT en cookie HttpOnly, CSRF y BCrypt</code></p>
         </div>
       </div>
     `
