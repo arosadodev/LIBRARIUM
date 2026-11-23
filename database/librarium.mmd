@@ -1,0 +1,84 @@
+erDiagram
+    usuarios {
+        BIGINT id PK
+        VARCHAR(50) username UK "NOT NULL"
+        VARCHAR(100) email UK "NOT NULL"
+        VARCHAR(250) password_hash "NOT NULL"
+        ENUM rol "ROLE_USER | ROLE_ADMIN"
+        TEXT descripcion
+        DATETIME fecha_registro
+    }
+
+    libros {
+        BIGINT id PK
+        VARCHAR(100) open_library_key UK
+        VARCHAR(20) isbn
+        VARCHAR(255) titulo "NOT NULL"
+        TEXT sinopsis
+        INT ano_publicacion
+        VARCHAR(500) portada_url
+        DATETIME fecha_registro
+    }
+
+    autores {
+        BIGINT id PK
+        VARCHAR(255) nombre UK "NOT NULL"
+    }
+
+    libros_autores {
+        BIGINT libro_id PK, FK
+        BIGINT autor_id PK, FK
+    }
+
+    resenas {
+        BIGINT id PK
+        BIGINT libro_id FK "UK(libro_id, usuario_id)"
+        BIGINT usuario_id FK "UK(libro_id, usuario_id)"
+        INT puntuacion "CHECK 1..5"
+        TEXT comentario
+        DATETIME fecha_registro
+    }
+
+    anotaciones_guias {
+        BIGINT id PK
+        BIGINT libro_id FK
+        BIGINT usuario_id FK
+        INT capitulo_numero
+        INT pagina
+        ENUM tipo "CITA | RESUMEN | REFLEXION | OTRO"
+        TEXT contenido "NOT NULL"
+        DATETIME fecha_creacion
+    }
+
+    foro_hilos {
+        BIGINT id PK
+        BIGINT libro_id FK
+        BIGINT usuario_id FK
+        VARCHAR(255) titulo_hilo "NOT NULL"
+        TEXT contenido_inicial "NOT NULL"
+        DATETIME fecha_creacion
+    }
+
+    foro_respuestas {
+        BIGINT id PK
+        BIGINT hilo_id FK
+        BIGINT usuario_id FK
+        TEXT contenido "NOT NULL"
+        DATETIME fecha_creacion
+    }
+
+%% Relaciones
+    libros ||--o{ libros_autores : "escrito en"
+    autores ||--o{ libros_autores : "participa en"
+
+    libros ||--o{ resenas : "recibe"
+    usuarios ||--o{ resenas : "escribe"
+
+    libros ||--o{ anotaciones_guias : "tiene"
+    usuarios ||--o{ anotaciones_guias : "crea"
+
+    libros ||--o{ foro_hilos : "origina"
+    usuarios ||--o{ foro_hilos : "abre"
+
+    foro_hilos ||--o{ foro_respuestas : "contiene"
+    usuarios ||--o{ foro_respuestas : "publica"
