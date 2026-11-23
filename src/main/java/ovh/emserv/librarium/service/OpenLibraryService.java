@@ -179,10 +179,11 @@ public class OpenLibraryService {
             List<String> isbns = new ArrayList<>();
             doc.path("isbn").forEach(isbn -> isbns.add(isbn.asText()));
 
-            Integer coverId = doc.has("cover_i") ? doc.get("cover_i").asInt() : null;
+            JsonNode cover = doc.get("cover_i");
+            Integer coverId = cover == null || cover.isNull() ? null : cover.asInt();
             String coverUrl = coverId == null
                     ? null
-                    : "https://covers.openlibrary.org/b/id/" + coverId + "-L.jpg";
+                    : "https://covers.openlibrary.org/b/id/" + coverId + "-L.jpg?default=false";
 
             String sinopsis = extraerSinopsis(doc);
 

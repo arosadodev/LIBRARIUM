@@ -43,7 +43,8 @@ async function request(path, options = {}, csrfRetry = true) {
     const bodyMessage = responseBody && typeof responseBody === 'object'
       ? responseBody.message || responseBody.error
       : typeof responseBody === 'string' && !/^\s*</.test(responseBody) ? responseBody : null
-    if (response.status === 403 && unsafeMethod && csrfRetry && /token de seguridad/i.test(bodyMessage || '')) {
+    if (response.status === 403 && unsafeMethod && csrfRetry
+        && (path === '/api/auth/register' || path === '/api/auth/login' || /token de seguridad/i.test(bodyMessage || ''))) {
       csrfToken = null
       await refreshCsrfToken()
       return request(path, options, false)
@@ -61,11 +62,20 @@ async function request(path, options = {}, csrfRetry = true) {
 }
 
 async function refreshCsrfToken() {
-  const result = await request('/api/auth/csrf')
+  const result = await request('/api/auth/csrf', { cache: 'no-store' })
   csrfToken = result?.token || null
   csrfHeader = result?.headerName || 'X-XSRF-TOKEN'
   if (!csrfToken) throw new Error('La API no entregó el token de seguridad. Recarga la página e inténtalo de nuevo.')
 }
+
+// Open Library can return an ID whose image is missing. Replace broken cover
+// requests with the local mark so search results remain usable.
+document.addEventListener('error', (event) => {
+  const image = event.target
+  if (image instanceof HTMLImageElement && image.src.startsWith('https://covers.openlibrary.org/')) {
+    image.src = fallbackCover
+  }
+}, true)
 
 function clearStoredUser() {
   sessionUser = null
